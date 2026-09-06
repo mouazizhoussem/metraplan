@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M50 50H450V350C450 350 450 450 350 450H50V50Z" fill="#E6E619"/>
+  
+  <path d="M50 50H450V330C450 330 450 380 400 380C350 380 350 430 350 450H50V50Z" stroke="black" stroke-width="20" stroke-linejoin="round"/>
+  
+  <text x="250" y="310" font-family="Arial, sans-serif" font-size="180" font-weight="bold" fill="black" text-anchor="middle">M</text>
+  <text x="380" y="180" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="black">2</text>
+  
+  <g transform="translate(400, 420)">
+    <line x1="-50" y1="0" x2="50" y2="0" stroke="#2D9344" stroke-width="25" stroke-linecap="round"/>
+    <line x1="0" y1="-50" x2="0" y2="50" stroke="#2D9344" stroke-width="25" stroke-linecap="round"/>
+  </g>
+</svg>

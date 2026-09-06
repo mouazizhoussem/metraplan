@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Zone lumineuse de l'ouverture -->
+  <rect x="8" y="9" width="8" height="6" rx="0.5" fill="#87CEEB" opacity="0.75"/>
+  <!-- Segment gauche (mur solide) -->
+  <line x1="2" y1="12" x2="8" y2="12" stroke="#2C3E50" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Segment droit (mur solide) -->
+  <line x1="16" y1="12" x2="22" y2="12" stroke="#2C3E50" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Tirets verticaux aux limites de l'ouverture -->
+  <line x1="8"  y1="8.5" x2="8"  y2="15.5" stroke="#2C3E50" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="16" y1="8.5" x2="16" y2="15.5" stroke="#2C3E50" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Points d'extrémité du segment -->
+  <circle cx="2"  cy="12" r="2" fill="#2C3E50"/>
+  <circle cx="22" cy="12" r="2" fill="#2C3E50"/>
+</svg>

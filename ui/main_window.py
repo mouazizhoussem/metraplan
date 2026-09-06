@@ -1045,8 +1045,7 @@ class MainWindow(QMainWindow):
 
         self.pan_action = QAction(get_icon("pan"), "Déplacer", self)
         self.pan_action.setCheckable(True)
-        self.pan_action.setShortcut("H")
-        self.pan_action.setStatusTip("Déplacer la vue par cliquer-glisser (sans souris : H)")
+        self.pan_action.setStatusTip("Déplacer la vue par cliquer-glisser")
         self.pan_action.triggered.connect(self._activate_pan_mode)
 
         # Action Mode Ortho
@@ -1889,7 +1888,7 @@ class MainWindow(QMainWindow):
         self._save_current_page_entities()
         self._pdf_import_offset = len(self._all_pages)
 
-        dpi = int(options.get("dpi", 200))
+        dpi = int(options.get("dpi", 150))
         page_range = options.get("page_range")
         grayscale = options.get("grayscale", False)
 

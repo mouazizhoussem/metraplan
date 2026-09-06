@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsPixmapItem, QRubberBand
 from PyQt5.QtCore import Qt, QPoint, QPointF, QRect, QSize
-from PyQt5.QtGui import QPixmap, QPolygonF, QColor
+from PyQt5.QtGui import QPixmap, QPolygonF, QColor, QPainter
 
 from core.canvas_scene import CanvasScene
 from core.entity_manager import EntityManager
@@ -60,6 +60,7 @@ class CanvasView(QGraphicsView):
         self.openings = []
         self.mode = "idle"
 
+
         # Initialisation de pixels_per_meter avec valeur par défaut
         self.pixels_per_meter = 100
 
@@ -85,6 +86,10 @@ class CanvasView(QGraphicsView):
         self.last_entity_created = None
         self.last_surface_properties = None
         self.last_perimeter_properties = None
+
+        # Qualité de rendu : antialiasing + interpolation bilinéaire au dézoom
+        self.setRenderHint(QPainter.Antialiasing)
+        self.setRenderHint(QPainter.SmoothPixmapTransform)
 
         # Configuration de la sélection
         self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -185,6 +190,7 @@ class CanvasView(QGraphicsView):
             self.scene.removeItem(self.image_item)
 
         self.image_item = QGraphicsPixmapItem(self.pixmap)
+        self.image_item.setTransformationMode(Qt.SmoothTransformation)
         self.scene.addItem(self.image_item)
 
         # Ajuster la vue

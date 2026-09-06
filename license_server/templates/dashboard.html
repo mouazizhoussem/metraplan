@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Métraplan — Dashboard Licences</title>
+<style>
+  :root {
+    --blue:   #1976d2;
+    --green:  #2e7d32;
+    --red:    #c62828;
+    --orange: #e65100;
+    --gray:   #607d8b;
+    --bg:     #f0f4f8;
+    --card:   #ffffff;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #263238; }
+
+  header {
+    background: var(--blue);
+    color: white;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  header span { font-size: 0.85rem; opacity: .8; }
+
+  .container { max-width: 1300px; margin: 0 auto; padding: 24px 16px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .card h2 { font-size: 1rem; color: var(--blue); margin-bottom: 16px;
+             border-bottom: 2px solid var(--blue); padding-bottom: 8px; }
+
+  .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 0.78rem; color: var(--gray); font-weight: 600; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 0.9rem; outline: none; transition: border-color .2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--blue);
+  }
+  .form-group.grow { flex: 1; min-width: 180px; }
+
+  .btn {
+    padding: 9px 20px; border: none; border-radius: 4px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    transition: background .2s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: #1565c0; }
+  .btn-danger  { background: var(--red); color: white; }
+  .btn-danger:hover { background: #b71c1c; }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { background: #1b5e20; }
+  .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { background: #eceff1; color: var(--gray); font-weight: 700;
+       padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  tr:hover td { background: #f5f9ff; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .badge-inactive { background: #e0e0e0; color: #616161; }
+  .badge-active   { background: #c8e6c9; color: var(--green); }
+  .badge-blocked  { background: #ffcdd2; color: var(--red); }
+  .badge-expired  { background: #fff9c4; color: var(--orange); }
+
+  .key-code {
+    font-family: 'Courier New', monospace; font-size: 0.85rem;
+    background: #f5f5f5; padding: 3px 8px; border-radius: 4px;
+    cursor: pointer; user-select: all;
+  }
+  .key-code:hover { background: #e3f2fd; }
+
+  #result-box {
+    display: none; margin-top: 16px; padding: 14px 18px;
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px;
+  }
+  #result-box .result-key {
+    font-family: 'Courier New', monospace; font-size: 1.2rem;
+    font-weight: 700; color: var(--green); letter-spacing: 2px;
+  }
+  #result-box .result-info { font-size: 0.85rem; color: #555; margin-top: 6px; }
+
+  .search-bar { margin-bottom: 14px; }
+  .search-bar input {
+    width: 300px; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 0.9rem;
+  }
+
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+  .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat-card {
+    flex: 1; min-width: 120px; background: var(--card);
+    border-radius: 8px; padding: 14px 18px; text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-card .num { font-size: 1.8rem; font-weight: 700; }
+  .stat-card .lbl { font-size: 0.75rem; color: var(--gray); margin-top: 2px; }
+  .stat-total   .num { color: var(--blue); }
+  .stat-active  .num { color: var(--green); }
+  .stat-blocked .num { color: var(--red); }
+  .stat-expired .num { color: var(--orange); }
+  .stat-inactive .num { color: var(--gray); }
+
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #323232; color: white; padding: 12px 24px;
+    border-radius: 6px; font-size: 0.9rem; display: none;
+    z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  }
+  @media print { header, .card:first-of-type, .toolbar { display: none; } }
+
+  /* ── Modales ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 10px; padding: 28px 32px;
+    width: 480px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  }
+  .modal h3 { font-size: 1.05rem; color: var(--blue); margin-bottom: 18px;
+              border-bottom: 2px solid var(--blue); padding-bottom: 8px; }
+  .modal .form-group { margin-bottom: 12px; }
+  .modal .form-group label { display: block; font-size: 0.78rem;
+    color: var(--gray); font-weight: 600; margin-bottom: 4px; }
+  .modal .form-group input, .modal .form-group select, .modal .form-group textarea {
+    width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 0.9rem;
+  }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+  /* Historique */
+  .history-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 12px; }
+  .history-table th { background: #eceff1; color: var(--gray); font-weight: 700;
+    padding: 7px 10px; text-align: left; }
+  .history-table td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+  .badge-valid   { background: #c8e6c9; color: var(--green); }
+  .badge-blocked { background: #ffcdd2; color: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🔑 Métraplan — Gestion des Licences</h1>
+    <span>Dashboard Administrateur</span>
+  </div>
+  <div style="margin-left:auto">
+    <a href="/logout" style="color:rgba(255,255,255,.8);font-size:0.85rem;
+       text-decoration:none;padding:7px 16px;border:1px solid rgba(255,255,255,.4);
+       border-radius:4px;transition:background .2s;"
+       onmouseover="this.style.background='rgba(255,255,255,.15)'"
+       onmouseout="this.style.background='transparent'">
+      🚪 Déconnexion
+    </a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Statistiques -->
+  <div class="stats" id="stats-row">
+    <div class="stat-card stat-total">  <div class="num" id="s-total">—</div>  <div class="lbl">Total</div></div>
+    <div class="stat-card stat-active"> <div class="num" id="s-active">—</div> <div class="lbl">Actives</div></div>
+    <div class="stat-card stat-inactive"><div class="num" id="s-inactive">—</div><div class="lbl">Inactives</div></div>
+    <div class="stat-card stat-blocked"><div class="num" id="s-blocked">—</div><div class="lbl">Bloquées</div></div>
+    <div class="stat-card stat-expired"><div class="num" id="s-expired">—</div><div class="lbl">Expirées</div></div>
+  </div>
+
+  <!-- Générer une clé -->
+  <div class="card">
+    <h2>➕ Générer une nouvelle licence</h2>
+    <div class="form-row">
+      <div class="form-group grow">
+        <label>Nom du client *</label>
+        <input id="f-name" type="text" placeholder="Ex : Ahmed Benali — Entreprise BTP" required>
+      </div>
+      <div class="form-group grow">
+        <label>Email client</label>
+        <input id="f-email" type="email" placeholder="client@example.com">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="f-type">
+          <option value="standard">Standard</option>
+          <option value="pro">Pro</option>
+          <option value="trial">Essai</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Durée (jours)</label>
+        <input id="f-days" type="number" value="365" min="1" max="3650" style="width:90px">
+      </div>
+      <div class="form-group grow">
+        <label>Notes internes</label>
+        <input id="f-notes" type="text" placeholder="Optionnel">
+      </div>
+      <button class="btn btn-primary" onclick="generateKey()">Générer</button>
+    </div>
+
+    <div id="result-box">
+      <div>Clé générée avec succès ✅</div>
+      <div class="result-key" id="result-key"></div>
+      <div class="result-info" id="result-info"></div>
+      <div style="margin-top:10px; display:flex; gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="copyKey()">📋 Copier</button>
+        <button class="btn btn-success btn-sm" onclick="printKey()">🖨 Imprimer / PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des licences -->
+  <div class="card">
+    <h2>📋 Toutes les licences</h2>
+    <div class="toolbar">
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher clé, client..." oninput="filterTable()">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadLicenses()">🔄 Actualiser</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="lic-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Clé de licence</th>
+            <th>Client</th>
+            <th>Type</th>
+            <th>Machine ID</th>
+            <th>Statut</th>
+            <th>Expiration</th>
+            <th>Dernier check</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="lic-body">
+          <tr><td colspan="9" style="text-align:center;color:#999;padding:24px">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modale Modifier ── -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <h3>✏️ Modifier la licence</h3>
+    <input type="hidden" id="edit-key">
+    <div class="form-group">
+      <label>Nom du client *</label>
+      <input id="edit-name" type="text">
+    </div>
+    <div class="form-group">
+      <label>Email client</label>
+      <input id="edit-email" type="email">
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="edit-type">
+        <option value="standard">Standard</option>
+        <option value="pro">Pro</option>
+        <option value="trial">Essai</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Date d'expiration (YYYY-MM-DD)</label>
+      <input id="edit-expires" type="date">
+    </div>
+    <div class="form-group">
+      <label>Notes internes</label>
+      <input id="edit-notes" type="text">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" style="background:#eceff1;color:#546e7a"
+        onclick="closeModal('modal-edit')">Annuler</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEdit()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modale Historique ── -->
+<div class="modal-overlay" id="modal-history">
+  <div class="modal" style="width:660px">
+    <h3>📜 Historique des connexions — <span id="history-key-label"></span></h3>
+    <div id="history-content" style="max-height:400px;overflow-y:auto">
+      <p style="color:#aaa;text-align:center;padding:20px">Chargement…</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" style="background:#eceff1;color:#546e7a"
+        onclick="closeModal('modal-history')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Impression d'une clé -->
+<div id="print-area" style="display:none">
+  <style>
+    @media print {
+      body > * { display: none !important; }
+      #print-area { display: block !important; font-family: 'Segoe UI', sans-serif; padding: 40px; }
+    }
+  </style>
+  <div id="print-content"></div>
+</div>
+
+<script>
+const ADMIN_KEY = "{{ admin_key }}";
+const API = "";   // même origine
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { "Content-Type": "application/json", "x-admin-key": ADMIN_KEY },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({detail: "Erreur réseau"}));
+    throw new Error(err.detail || "Erreur inconnue");
+  }
+  return r.json();
+}
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.background = ok ? '#2e7d32' : '#c62828';
+  setTimeout(() => t.style.display='none', 3500);
+}
+
+function badge(status) {
+  return `<span class="badge badge-${status}">${status}</span>`;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return iso.substring(0, 10);
+}
+
+function fmtMachine(mid) {
+  if (!mid) return '<span style="color:#aaa">Non activée</span>';
+  return mid.substring(0, 16) + '…';
+}
+
+let _licenses = [];
+
+async function loadLicenses() {
+  try {
+    _licenses = await api('GET', '/licenses');
+    renderTable(_licenses);
+    updateStats(_licenses);
+  } catch(e) {
+    toast('Erreur : ' + e.message, false);
+  }
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('lic-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:24px">Aucune licence enregistrée</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td>${r.id}</td>
+      <td><span class="key-code" title="Cliquer pour copier" onclick="navigator.clipboard.writeText('${r.license_key}');toast('Clé copiée')">
+        ${r.license_key}</span></td>
+      <td><b>${r.client_name}</b>${r.client_email ? '<br><small style="color:#90a4ae">'+r.client_email+'</small>' : ''}</td>
+      <td>${r.type}</td>
+      <td style="font-size:0.78rem;color:#78909c" title="${r.machine_id||''}">${fmtMachine(r.machine_id)}</td>
+      <td>${badge(r.status)}</td>
+      <td>${fmtDate(r.expires_at)}</td>
+      <td>${fmtDate(r.last_check)}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        ${r.status !== 'blocked'
+          ? `<button class="btn btn-danger btn-sm" onclick="blockKey('${r.license_key}','block')">🔒 Bloquer</button>`
+          : `<button class="btn btn-success btn-sm" onclick="blockKey('${r.license_key}','unblock')">🔓 Débloquer</button>`}
+        <button class="btn btn-sm" style="background:#1565c0;color:white"
+          onclick="openEdit(${JSON.stringify(r).replace(/"/g,'&quot;')})">✏️ Modifier</button>
+        <button class="btn btn-sm" style="background:#6a1b9a;color:white"
+          onclick="transferKey('${r.license_key}')">🔄 Transférer</button>
+        <button class="btn btn-sm" style="background:#37474f;color:white"
+          onclick="openHistory('${r.license_key}')">📜 Historique</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = _licenses.filter(r =>
+    r.license_key.toLowerCase().includes(q) ||
+    r.client_name.toLowerCase().includes(q) ||
+    (r.client_email||'').toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+function updateStats(rows) {
+  document.getElementById('s-total').textContent   = rows.length;
+  document.getElementById('s-active').textContent  = rows.filter(r=>r.status==='active').length;
+  document.getElementById('s-inactive').textContent= rows.filter(r=>r.status==='inactive').length;
+  document.getElementById('s-blocked').textContent = rows.filter(r=>r.status==='blocked').length;
+  document.getElementById('s-expired').textContent = rows.filter(r=>r.status==='expired').length;
+}
+
+async function generateKey() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('Le nom du client est obligatoire', false); return; }
+  try {
+    const res = await api('POST', '/generate_license', {
+      client_name:   name,
+      client_email:  document.getElementById('f-email').value.trim(),
+      type:          document.getElementById('f-type').value,
+      duration_days: parseInt(document.getElementById('f-days').value),
+      notes:         document.getElementById('f-notes').value.trim(),
+    });
+    document.getElementById('result-key').textContent = res.license_key;
+    document.getElementById('result-info').innerHTML =
+      `Client : <b>${res.client_name}</b> &nbsp;|&nbsp; Type : ${res.type}
+       &nbsp;|&nbsp; Expiration : ${res.expires_at.substring(0,10)}`;
+    document.getElementById('result-box').style.display = 'block';
+    _currentKey = res;
+    loadLicenses();
+    toast('Clé générée avec succès');
+  } catch(e) {
+    toast('Erreur : ' + e.message, false);
+  }
+}
+
+let _currentKey = null;
+
+function copyKey() {
+  const k = document.getElementById('result-key').textContent;
+  navigator.clipboard.writeText(k);
+  toast('Clé copiée dans le presse-papiers');
+}
+
+function printKey() {
+  if (!_currentKey) return;
+  const exp = (_currentKey.expires_at||'').substring(0,10);
+  const content = `
+    <div style="border:2px solid #1976d2;border-radius:8px;padding:32px;max-width:600px;margin:auto">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:1.8rem;font-weight:700;color:#1976d2">Métraplan</div>
+        <div style="color:#78909c">Certificat de Licence</div>
+      </div>
+      <table style="width:100%;font-size:0.95rem;border-collapse:collapse">
+        <tr><td style="padding:8px 0;color:#607d8b;width:40%">Client</td><td><b>${_currentKey.client_name}</b></td></tr>
+        <tr><td style="padding:8px 0;color:#607d8b">Email</td><td>${_currentKey.client_email||'—'}</td></tr>
+        <tr><td style="padding:8px 0;color:#607d8b">Type</td><td>${_currentKey.type}</td></tr>
+        <tr><td style="padding:8px 0;color:#607d8b">Expiration</td><td>${exp}</td></tr>
+      </table>
+      <div style="margin-top:24px;background:#f5f9ff;border:1px solid #90caf9;border-radius:6px;padding:16px;text-align:center">
+        <div style="font-size:0.8rem;color:#607d8b;margin-bottom:8px">CLÉ DE LICENCE</div>
+        <div style="font-family:monospace;font-size:1.4rem;font-weight:700;letter-spacing:4px;color:#1976d2">
+          ${_currentKey.license_key}
+        </div>
+      </div>
+      <div style="margin-top:24px;font-size:0.8rem;color:#90a4ae;text-align:center">
+        Cette licence est strictement personnelle et liée à un seul ordinateur.<br>
+        Support : support@metraplan.com
+      </div>
+    </div>
+  `;
+  document.getElementById('print-content').innerHTML = content;
+  window.print();
+}
+
+async function blockKey(key, action) {
+  const label = action === 'block' ? 'bloquer' : 'débloquer';
+  if (!confirm(`Voulez-vous vraiment ${label} la clé ${key} ?`)) return;
+  try {
+    await api('POST', '/block_license', { license_key: key, action });
+    toast(`Clé ${action === 'block' ? 'bloquée' : 'débloquée'}`);
+    loadLicenses();
+  } catch(e) {
+    toast('Erreur : ' + e.message, false);
+  }
+}
+
+// ── Modifier ──────────────────────────────────────────────────────────────
+function openEdit(r) {
+  document.getElementById('edit-key').value     = r.license_key;
+  document.getElementById('edit-name').value    = r.client_name  || '';
+  document.getElementById('edit-email').value   = r.client_email || '';
+  document.getElementById('edit-type').value    = r.type         || 'standard';
+  document.getElementById('edit-notes').value   = r.notes        || '';
+  // Date expiration format YYYY-MM-DD pour <input type="date">
+  const exp = (r.expires_at || '').substring(0, 10);
+  document.getElementById('edit-expires').value = exp;
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+async function saveEdit() {
+  const key = document.getElementById('edit-key').value;
+  const exp = document.getElementById('edit-expires').value;
+  try {
+    await api('PUT', `/licenses/${key}`, {
+      client_name:  document.getElementById('edit-name').value.trim(),
+      client_email: document.getElementById('edit-email').value.trim(),
+      type:         document.getElementById('edit-type').value,
+      expires_at:   exp,
+      notes:        document.getElementById('edit-notes').value.trim(),
+    });
+    closeModal('modal-edit');
+    toast('Licence mise à jour');
+    loadLicenses();
+  } catch(e) {
+    toast('Erreur : ' + e.message, false);
+  }
+}
+
+// ── Transférer ──────────────────────────────────────────────────────────────
+async function transferKey(key) {
+  if (!confirm(`Transférer la clé ${key} ?\n\nCela permettra au client de s'activer sur un nouveau PC.\nL'ancienne activation sera désactivée.`)) return;
+  try {
+    await api('POST', '/transfer_license', { license_key: key });
+    toast('Licence transférée — machine ID réinitialisé');
+    loadLicenses();
+  } catch(e) {
+    toast('Erreur : ' + e.message, false);
+  }
+}
+
+// ── Historique ──────────────────────────────────────────────────────────────
+async function openHistory(key) {
+  document.getElementById('history-key-label').textContent = key;
+  document.getElementById('history-content').innerHTML =
+    '<p style="color:#aaa;text-align:center;padding:20px">Chargement…</p>';
+  document.getElementById('modal-history').classList.add('open');
+  try {
+    const rows = await api('GET', `/licenses/${key}/history`);
+    if (!rows.length) {
+      document.getElementById('history-content').innerHTML =
+        '<p style="color:#aaa;text-align:center;padding:20px">Aucune vérification enregistrée</p>';
+      return;
+    }
+    const html = `<table class="history-table">
+      <thead><tr><th>#</th><th>Date / Heure</th><th>Machine ID</th><th>Résultat</th></tr></thead>
+      <tbody>
+      ${rows.map((r, i) => `<tr>
+        <td>${i+1}</td>
+        <td>${(r.checked_at||'').replace('T',' ').substring(0,19)}</td>
+        <td style="font-family:monospace;font-size:0.78rem">${r.machine_id ? r.machine_id.substring(0,20)+'…' : '—'}</td>
+        <td><span class="badge badge-${r.result}">${r.result}</span></td>
+      </tr>`).join('')}
+      </tbody></table>`;
+    document.getElementById('history-content').innerHTML = html;
+  } catch(e) {
+    document.getElementById('history-content').innerHTML =
+      `<p style="color:red;text-align:center;padding:20px">Erreur : ${e.message}</p>`;
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Fermer modale en cliquant hors
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// Chargement initial
+loadLicenses();
+setInterval(loadLicenses, 30000);   // Rafraîchissement automatique toutes les 30s
+</script>
+</body>
+</html>

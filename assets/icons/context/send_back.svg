@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background gray square - top left -->
+  <rect x="0" y="0" width="224" height="224" rx="40" fill="#999999"/>
+  
+  <!-- Main red square with cutout -->
+  <path d="M 96 223 L 96 389 C 96 411.091 113.909 429 136 429 L 288 429 L 288 289 L 400 289 C 422.091 289 440 271.091 440 249 L 440 137 C 440 114.909 422.091 97 400 97 L 224 97 L 224 223 Z" fill="#ea1e23"/>
+  
+  <!-- White pixel blocks - upper area (eyes) -->
+  <rect x="272" y="144" width="32" height="32" rx="4" fill="#ffffff"/>
+  <rect x="336" y="144" width="32" height="32" rx="4" fill="#ffffff"/>
+  
+  <!-- White pixel block - right side -->
+  <rect x="336" y="208" width="32" height="32" rx="4" fill="#ffffff"/>
+  
+  <!-- White pixel block - left side middle -->
+  <rect x="144" y="272" width="32" height="32" rx="4" fill="#ffffff"/>
+  
+  <!-- White pixel blocks - bottom area (mouth) -->
+  <rect x="144" y="336" width="32" height="32" rx="4" fill="#ffffff"/>
+  <rect x="208" y="336" width="32" height="32" rx="4" fill="#ffffff"/>
+  
+  <!-- Background gray square - bottom right -->
+  <rect x="288" y="288" width="224" height="224" rx="40" fill="#999999"/>
+</svg>

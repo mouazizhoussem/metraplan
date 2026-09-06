@@ -1,11 +1,11 @@
 ; =====================================================================
 ; Métraplan — Script d'installation Inno Setup
-; Version : 1.0.1
+; Version : 1.0.3
 ; Auteur  : M.Housse
 ; =====================================================================
 
 #define AppName      "Métraplan"
-#define AppVersion   "1.0.1"
+#define AppVersion   "1.0.3"
 #define AppPublisher "M.Housse"
 #define AppURL       "https://www.metraplan.com"
 #define AppExeName   "Metraplan.exe"
@@ -30,7 +30,7 @@ WizardImageFile=assets\images\setup_banner.bmp
 ; Petite image en haut à droite (55x58 px)
 WizardSmallImageFile=assets\images\setup_small.bmp
 OutputDir=dist
-OutputBaseFilename=MetraplanInstall_v{#AppVersion}
+OutputBaseFilename=MetraplanSetup_v{#AppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 ; Niveau de privilèges : admin recommandé pour Program Files
@@ -48,29 +48,20 @@ RestartApplications=no
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
 [Tasks]
-Name: "desktopicon";    Description: "Créer une icône sur le &bureau";       GroupDescription: "Icônes supplémentaires :"; Flags: unchecked
+Name: "desktopicon";    Description: "Créer une icône sur le &bureau";       GroupDescription: "Icônes supplémentaires :"; Flags: checkedonce
 Name: "quicklaunchicon"; Description: "Créer une icône dans la barre de &lancement rapide"; GroupDescription: "Icônes supplémentaires :"; Flags: unchecked; OnlyBelowVersion: 6.1
 
 [Files]
-; Exécutable principal
-Source: "dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-
-; Fichier de configuration
-Source: "config.ini";          DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist
-
-; Assets (images, icônes, styles) — exclure les fichiers de travail internes
-Source: "assets\images\splash.png";        DestDir: "{app}\assets\images";  Flags: ignoreversion
-Source: "assets\images\*.pdf";             DestDir: "{app}\assets\images";  Flags: ignoreversion skipifsourcedoesntexist
-Source: "assets\icons\*";      DestDir: "{app}\assets\icons";   Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "assets\style\*";      DestDir: "{app}\assets\style";   Flags: ignoreversion recursesubdirs createallsubdirs
+; Tous les fichiers du dossier onedir PyInstaller (exe + dépendances bundlées)
+Source: "dist\Metraplan\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 ; Raccourci dans le menu Démarrer
-Name: "{group}\{#AppName}";                  Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\assets\icons\metraplan.ico"
+Name: "{group}\{#AppName}";                  Filename: "{app}\{#AppExeName}"
 Name: "{group}\Désinstaller {#AppName}";     Filename: "{uninstallexe}"
 
-; Raccourci bureau (si coché)
-Name: "{autodesktop}\{#AppName}";            Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\assets\icons\metraplan.ico"; Tasks: desktopicon
+; Raccourci bureau (coché par défaut à la première installation)
+Name: "{autodesktop}\{#AppName}";            Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 ; Barre de lancement rapide (si coché)
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: quicklaunchicon
@@ -82,4 +73,3 @@ Filename: "{app}\{#AppExeName}"; Description: "Lancer {#AppName}"; Flags: nowait
 [UninstallDelete]
 ; Supprimer les fichiers générés par l'application lors de la désinstallation
 Type: filesandordirs; Name: "{app}\__pycache__"
-Type: filesandordirs; Name: "{app}\build"

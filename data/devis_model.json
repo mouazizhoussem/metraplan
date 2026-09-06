@@ -1,0 +1,943 @@
+{
+  "version": "1.0",
+  "title": "Bibliothèque de devis Metraplan",
+  "description": "Modèle personnalisé",
+  "lots": [
+    {
+      "id": "01",
+      "label": "Terrassement",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "01.01",
+          "label": "Décapage de la terre végétale",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "01.02",
+          "label": "Fouilles en puits pour semelles isolées",
+          "unit": "m³",
+          "default_formula": "surface_brute × profondeur",
+          "is_custom": false
+        },
+        {
+          "id": "01.03",
+          "label": "Fouilles en tranchée pour semelles filantes",
+          "unit": "m³",
+          "default_formula": "longueur_nette × largeur × profondeur",
+          "is_custom": false
+        },
+        {
+          "id": "01.04",
+          "label": "Terrassement en grande masse",
+          "unit": "m³",
+          "default_formula": "surface_brute × profondeur",
+          "is_custom": false
+        },
+        {
+          "id": "01.05",
+          "label": "Remblais des vides en tuff",
+          "unit": "m³",
+          "default_formula": "surface_brute × epaisseur",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "label": "Infrastructure",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "02.01",
+          "label": "Béton de propreté dosé à 250 kg/m³",
+          "unit": "m³",
+          "default_formula": "surface_brute × 0.10",
+          "is_custom": false
+        },
+        {
+          "id": "02.02",
+          "label": "Gros béton légèrement armé dosé à 350 kg/m³",
+          "unit": "m³",
+          "default_formula": "surface_brute × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "02.03",
+          "label": "B.A dosé à 350 kg/m³ pour semelles",
+          "unit": "m³",
+          "default_formula": "surface_brute × hauteur",
+          "is_custom": false
+        },
+        {
+          "id": "02.04",
+          "label": "B.A dosé à 350 kg/m³ pour voile périphérique",
+          "unit": "m³",
+          "default_formula": "surface_nette × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "02.05",
+          "label": "B.A dosé à 350 kg/m³ pour avant-poteaux, avant-voile",
+          "unit": "m³",
+          "default_formula": "surface_nette × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "02.06",
+          "label": "B.A dosé à 350 kg/m³ pour longrines",
+          "unit": "m³",
+          "default_formula": "longueur_nette × largeur × hauteur",
+          "is_custom": false
+        },
+        {
+          "id": "02.07",
+          "label": "Hérissonnage en pierres sèches ép. 20 cm",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "02.08",
+          "label": "Dallage sur hérissonnage ép. 10 cm",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "label": "Superstructure",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "03.01",
+          "label": "B.A dosé à 350 kg/m³ pour poteaux",
+          "unit": "m³",
+          "default_formula": "surface_brute × hauteur",
+          "is_custom": false
+        },
+        {
+          "id": "03.02",
+          "label": "B.A dosé à 350 kg/m³ pour voiles",
+          "unit": "m³",
+          "default_formula": "surface_nette × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "03.03",
+          "label": "B.A dosé à 350 kg/m³ pour poutres et chaînages",
+          "unit": "m³",
+          "default_formula": "longueur_nette × largeur × hauteur",
+          "is_custom": false
+        },
+        {
+          "id": "03.04",
+          "label": "B.A dosé à 350 kg/m³ pour escalier",
+          "unit": "m³",
+          "default_formula": "surface_brute × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "03.05",
+          "label": "B.A dosé à 350 kg/m³ pour dalle pleine",
+          "unit": "m³",
+          "default_formula": "surface_brute × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "03.06",
+          "label": "B.A dosé à 250 kg/m³ pour linteaux",
+          "unit": "m³",
+          "default_formula": "longueur_nette × largeur × hauteur",
+          "is_custom": false
+        },
+        {
+          "id": "03.07",
+          "label": "B.A dosé à 350 kg/m³ pour acrotères",
+          "unit": "m³",
+          "default_formula": "longueur_nette × largeur × hauteur",
+          "is_custom": false
+        },
+        {
+          "id": "03.08",
+          "label": "Plancher en corps creux de 16+5 cm",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "label": "Maçonnerie",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "04.01",
+          "label": "Maçonnerie en brique creuse de 30 cm d'épaisseur",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "04.02",
+          "label": "Maçonnerie en brique creuse de 20 cm d'épaisseur",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "04.03",
+          "label": "Maçonnerie en brique creuse de 15 cm d'épaisseur",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "04.04",
+          "label": "Maçonnerie en brique creuse de 10 cm d'épaisseur",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "04.C01",
+          "label": "parping 20 cm",
+          "unit": "m²",
+          "default_formula": "",
+          "is_custom": true
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "label": "Enduits",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "05.01",
+          "label": "Enduit extérieur en mortier de ciment",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "05.02",
+          "label": "Enduit intérieur en mortier de ciment",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "05.03",
+          "label": "Enduit intérieur en plâtre",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "06",
+      "label": "Revêtements",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "06.01",
+          "label": "Carrelage en mono couche",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "06.02",
+          "label": "Dalle de sol",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "06.03",
+          "label": "Faïence murale",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "06.04",
+          "label": "Plinthe",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "06.05",
+          "label": "Marche et contre-marche en granito",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "06.06",
+          "label": "Couvre-joint",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "07",
+      "label": "Étanchéité",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "07.01",
+          "label": "Forme de pente en béton maigre y/c isolation thermique en polystirène 04 cm, film polyane",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "07.02",
+          "label": "Étanchéité tri-couches système adhérant 3×36S",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "07.03",
+          "label": "Étanchéité en pax aluminium",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "07.04",
+          "label": "Protection d'étanchéité en gravillon roulé ép. 6 cm",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "07.05",
+          "label": "Étanchéité sous carrelage pour salles humides",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "07.06",
+          "label": "F/P Gargouille + Crapaudine",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "08",
+      "label": "Assainissement Intérieur",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "08.01",
+          "label": "PEHD PN6 Ø200 y/c fouille, remblai de tranchée, lit de sable",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "08.02",
+          "label": "PEHD PN6 Ø315 y/c fouille, remblai de tranchée, lit de sable",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "08.03",
+          "label": "Exécution de caniveaux de chutes en Béton Armé",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "08.04",
+          "label": "Exécution regard de visite en B.A",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "09",
+      "label": "Menuiserie Métallique",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "09.01",
+          "label": "F/P de grillage métallique",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "09.02",
+          "label": "F/P porte métallique",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "09.03",
+          "label": "F/P de grillage pour protection de fenêtres",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "09.04",
+          "label": "F/P de garde-corps métallique",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "09.05",
+          "label": "F/P de trappe d'accès",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "09.C01",
+          "label": "porte michelaire",
+          "unit": "m²",
+          "default_formula": "",
+          "is_custom": true
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "label": "Électricité",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "10.01",
+          "label": "Hublot étanche en plastique / plafonnier y/c lampe 75W",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.02",
+          "label": "Point lumineux avec lampe",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.03",
+          "label": "Tube galvanisé de protection",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "10.04",
+          "label": "Prise bipolaire 2P+T 10A 220V",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.05",
+          "label": "Interrupteur S.A 10A 220V",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.06",
+          "label": "Interrupteur V et V 10A 220V",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.07",
+          "label": "Interrupteur D.A 10A 220V",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.08",
+          "label": "Sonnerie intérieure",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.09",
+          "label": "Bloc autonome 220V de sécurité",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.10",
+          "label": "Applique lavabo avec prise et interrupteurs incorporés",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.11",
+          "label": "Filerie en cuivre nu 1×28 mm²",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "10.12",
+          "label": "Câble d'alimentation U1000 R02-V 4×10 mm² + T",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "10.13",
+          "label": "Piquet de terre 12ml conducteur en cuivre + Barrette de coupure",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.14",
+          "label": "Tableau en bois pour compteur",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.15",
+          "label": "Tableau de branchement",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "10.16",
+          "label": "Tableau de distribution",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "label": "Plomberie Sanitaire",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "11.01",
+          "label": "Tube en cuivre pour alimentation",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "11.02",
+          "label": "Tube en multicouche pour alimentation",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "11.03",
+          "label": "Robinet de barrage",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.04",
+          "label": "Siphon de sol",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.05",
+          "label": "Robinet de puisage",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.06",
+          "label": "Vanne d'arrêt",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.07",
+          "label": "Évier de cuisine",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.08",
+          "label": "Receveur de douche",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.09",
+          "label": "Siège WC",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "11.10",
+          "label": "Baignoire",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "label": "Menuiserie Bois ou Aluminium",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "12.01",
+          "label": "Fenêtre en bois",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "12.02",
+          "label": "Porte pleine en bois",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "12.03",
+          "label": "Porte en bois à deux vantaux",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "12.04",
+          "label": "Portillons de placard",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "label": "Peinture et Vitrerie",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "13.01",
+          "label": "Peinture sur murs extérieurs",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "13.02",
+          "label": "Peinture sur murs intérieurs",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "13.03",
+          "label": "Verre",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "label": "Assainissement Extérieur",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "14.01",
+          "label": "PEHD Ø200 (assainissement extérieur)",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "14.02",
+          "label": "PEHD Ø315 (assainissement extérieur)",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "14.03",
+          "label": "Regard de visite en B.A dosé à 350 kg/m³",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "14.04",
+          "label": "Caniveau avaloir en B.A dosé à 350 kg/m³",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "label": "A.E.P (Alimentation en Eau Potable)",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "15.01",
+          "label": "PEHD Ø25 (alimentation eau potable)",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "15.02",
+          "label": "PEHD Ø32 (alimentation eau potable)",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "label": "Voirie et Aménagements Extérieurs",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "16.01",
+          "label": "Terrassement en grande masse (voirie)",
+          "unit": "m³",
+          "default_formula": "surface_brute × profondeur",
+          "is_custom": false
+        },
+        {
+          "id": "16.02",
+          "label": "Déblais pour décaissements",
+          "unit": "m³",
+          "default_formula": "surface_brute × profondeur",
+          "is_custom": false
+        },
+        {
+          "id": "16.03",
+          "label": "Remblai (voirie)",
+          "unit": "m³",
+          "default_formula": "surface_brute × epaisseur",
+          "is_custom": false
+        },
+        {
+          "id": "16.04",
+          "label": "Couche d'imprégnation en cut-back de goudron",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "16.05",
+          "label": "Tapis en enrobé à chaud — couche d'accrochage en émulsion",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "16.06",
+          "label": "Bordure de trottoirs type T3 jardinière",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "16.07",
+          "label": "F/P de bordure de trottoirs type T3",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "16.08",
+          "label": "Exécution de dallage pour trottoirs",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "16.09",
+          "label": "Carreaux en ciment anti-dérapant pour trottoirs",
+          "unit": "m²",
+          "default_formula": "surface_nette",
+          "is_custom": false
+        },
+        {
+          "id": "16.10",
+          "label": "Marche et contre-marche en granito (voirie)",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "16.11",
+          "label": "Couche de drainage en gravier 15/25",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "16.12",
+          "label": "Béton poreux",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        },
+        {
+          "id": "16.13",
+          "label": "Peinture spéciale pour béton poreux",
+          "unit": "m²",
+          "default_formula": "surface_brute",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "label": "Éclairage Extérieur",
+      "is_custom": false,
+      "items": [
+        {
+          "id": "17.01",
+          "label": "Tableau de commande d'éclairage extérieur",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.02",
+          "label": "Lampadaire",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.03",
+          "label": "Piquet de terre (éclairage extérieur)",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.04",
+          "label": "Câble d'alimentation en tranchées",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "17.05",
+          "label": "Câble d'alimentation apparent",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "17.06",
+          "label": "Fourreau en PVC pour passage de câble",
+          "unit": "ml",
+          "default_formula": "longueur_nette",
+          "is_custom": false
+        },
+        {
+          "id": "17.07",
+          "label": "Boîtes de dérivation étanches pour crosses murales",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.08",
+          "label": "Crosse murale avec luminaire",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.09",
+          "label": "Armoire générale",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.10",
+          "label": "Coffret de pieds de colonnes",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.11",
+          "label": "Boîte de dérivation",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        },
+        {
+          "id": "17.12",
+          "label": "Réalisation d'une niche en maçonnerie",
+          "unit": "U",
+          "default_formula": "nombre",
+          "is_custom": false
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "label": "Nouveau lot test",
+      "is_custom": true,
+      "items": []
+    },
+    {
+      "id": "18",
+      "label": "DEMOLITION",
+      "is_custom": true,
+      "items": []
+    }
+  ]
+}

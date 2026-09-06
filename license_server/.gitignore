@@ -1,0 +1,5 @@
+# Ne jamais versionner ces fichiers sensibles
+.env
+licenses.db
+__pycache__/
+*.pyc

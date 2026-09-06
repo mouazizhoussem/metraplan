@@ -1,0 +1,14 @@
+# Metraplan 4 — Dépendances Python
+# Installer avec : pip install -r requirements.txt
+
+# Interface graphique
+PyQt5>=5.15.0
+
+# Conversion et lecture PDF
+PyMuPDF>=1.23.0
+
+# Export Excel
+openpyxl>=3.1.0
+
+# (inclus dans Python standard — pas besoin d'installer)
+# decimal, pathlib, json, logging, re, copy, typing

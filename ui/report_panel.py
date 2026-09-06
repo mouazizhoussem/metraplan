@@ -244,7 +244,7 @@ class ReportPanel(QWidget):
         (3, "Groupe",           False),  # masqué par défaut
         (4, "Formule",          True),
         (5, "Calcul détaillé",  True),
-        (6, "Nombre",           True),    # coefficient multiplicateur (× N)
+        (6, "Nombre",           False),   # masqué par défaut
         (7, "Quantité",         True),
         (8, "Unité",            True),
     ]
@@ -836,6 +836,45 @@ class ReportPanel(QWidget):
                 lines.append(SEP)
                 # Afficher uniquement la surface nette (le brut se déduit des lignes ci-dessus)
                 lines.append(f"{'Surface nette':<{W_m}}:  =  {total_nette:.{ns}f}")
+
+                # ── Termes supplémentaires (jambage, etc.) pour formules composites ──
+                _expr_mm   = expr.strip()
+                _is_cmp_mm = bool(_re.search(r'[\w\)]\s*[+\-]', _expr_mm))
+                _DEDUCTION_VARS_MM = {"surface_deduction_ouvertures", "deduction_ouvertures"}
+                _has_ded_mm  = any(dv in _expr_mm for dv in _DEDUCTION_VARS_MM)
+                _SN_COMP_MM  = _is_cmp_mm and "surface_nette" in _expr_mm and not _has_ded_mm
+                _DEQ_COMP_MM = _is_cmp_mm and _has_ded_mm and "surface_brute" in _expr_mm
+
+                if _SN_COMP_MM or _DEQ_COMP_MM:
+                    # Substituer les variables pour obtenir le display et le total de la formule
+                    display_mm = _expr_mm
+                    for _nm in sorted(_ALLOWED_NAMES, key=len, reverse=True):
+                        _vv = v.get(_nm)
+                        if _vv is not None and _nm in display_mm:
+                            display_mm = display_mm.replace(_nm, f"{float(_vv):.{ns}f}")
+                    try:
+                        _norm_mm  = display_mm.replace("×", "*").replace("÷", "/")
+                        _total_mm = float(eval(_norm_mm, {"__builtins__": {}}, {}))  # noqa: S307
+                        _extra_mm = round(_total_mm - total_nette, ns)
+                    except Exception:
+                        _total_mm = None
+                        _extra_mm = 0.0
+
+                    if _total_mm is not None and abs(_extra_mm) > 1e-6:
+                        if _SN_COMP_MM:
+                            _core_pfx = f"{total_nette:.{ns}f}"
+                        else:
+                            _sb_s  = f"{float(v.get('surface_brute', 0.0) or 0.0):.{ns}f}"
+                            _ded_s = f"{float(v.get('deduction_ouvertures', 0.0) or v.get('surface_deduction_ouvertures', 0.0) or 0.0):.{ns}f}"
+                            _core_pfx = f"{_sb_s} - {_ded_s}"
+                        _extra_disp = display_mm.strip()
+                        if _extra_disp.startswith(_core_pfx):
+                            _extra_disp = _extra_disp[len(_core_pfx):].strip()
+                        lines.append(SEP)
+                        lines.append(f"{_extra_disp}  =  +{_extra_mm:.{ns}f}")
+                        lines.append(SEP)
+                        lines.append(f"{'Total':<{W_m}}:  =  {_total_mm:.{ns}f}")
+
                 # Ligne volume
                 net_for_vol = total_nette if total_nette < total_brute else total_brute
                 vl = _make_vol_line(expr.strip(), v, net_for_vol, W_m, item_unit=unit)
@@ -988,7 +1027,29 @@ class ReportPanel(QWidget):
             _DEDUCTION_VARS = {"surface_deduction_ouvertures", "deduction_ouvertures"}
             _has_deduction_var = any(dv in expr_s for dv in _DEDUCTION_VARS)
             _is_composite = bool(_re.search(r'[\w\)]\s*[+\-]', expr_s))
-            if _is_composite and not (_has_deduction_var and openings):
+
+            # Cas spécial 1 : formule composite contenant surface_nette + terme(s) supplémentaire(s)
+            # Ex : "surface_nette + (perimetre_ouvertures × 0.15)"
+            # → on veut afficher le détail BTP (brute/ouvertures/nette) PUIS les termes extra
+            _SN_COMPOSITE = (
+                _is_composite
+                and "surface_nette" in expr_s
+                and openings
+                and not _has_deduction_var
+            )
+
+            # Cas spécial 2 : formule composite avec déduction explicite + termes supplémentaires
+            # Ex : "surface_brute - deduction_ouvertures + (perimetre_ouvertures × 0.15)"
+            # Le result_brut vaut le TOTAL (incluant les termes extra), pas la surface_nette.
+            # → utiliser v["surface_nette"] comme base BTP, puis afficher les termes extra
+            _DEQ_COMPOSITE = (
+                _is_composite
+                and _has_deduction_var
+                and openings
+                and "surface_brute" in expr_s
+            )
+
+            if _is_composite and not (_has_deduction_var and openings) and not _SN_COMPOSITE:
                 col_calcul = f"{display}  =  {brut_str}"
                 return col_formula, col_calcul
 
@@ -1140,6 +1201,17 @@ class ReportPanel(QWidget):
 
             lines = []
 
+            # Pour _SN_COMPOSITE / _DEQ_COMPOSITE, la base BTP est surface_nette seul
+            # (pas le total composé qui inclut les termes supplémentaires)
+            result_brut_orig = None
+            _btp_base = result_brut
+            if result_brut is not None and (_SN_COMPOSITE or _DEQ_COMPOSITE):
+                _btp_base = round(float(v.get("surface_nette", 0.0) or 0.0), ns)
+
+            if _btp_base is not None:
+                result_brut_orig = result_brut   # garder le total composé pour plus tard
+                result_brut      = _btp_base     # utiliser surface_nette pour le bloc BTP
+
             if result_brut is not None:
                 if is_gross_formula:
                     gross_val = result_brut
@@ -1182,6 +1254,31 @@ class ReportPanel(QWidget):
 
             net_str = f"{net_val:.{ns}f}" if net_val is not None else "?"
             lines.append(f"{'Surface nette':<{W}}:  =  {net_str}")
+
+            # _SN_COMPOSITE / _DEQ_COMPOSITE : afficher les termes extra puis le total
+            if result_brut_orig is not None and (_SN_COMPOSITE or _DEQ_COMPOSITE):
+                sn_val    = net_val if net_val is not None else 0.0
+                extra_val = round(result_brut_orig - sn_val, ns)
+
+                if _SN_COMPOSITE:
+                    # Extraire la partie extra en supprimant le préfixe sn_val
+                    core_prefix = f"{sn_val:.{ns}f}"
+                else:
+                    # _DEQ_COMPOSITE : extraire en supprimant "sb_val - ded_val"
+                    _sb_str  = f"{float(v.get('surface_brute', 0.0) or 0.0):.{ns}f}"
+                    _ded_str = f"{float(v.get('deduction_ouvertures', 0.0) or v.get('surface_deduction_ouvertures', 0.0) or 0.0):.{ns}f}"
+                    core_prefix = f"{_sb_str} - {_ded_str}"
+
+                extra_disp = display.strip()
+                if extra_disp.startswith(core_prefix):
+                    extra_disp = extra_disp[len(core_prefix):].strip()
+
+                if abs(extra_val) > 1e-6:
+                    lines.append(SEP)
+                    lines.append(f"{extra_disp}  =  +{extra_val:.{ns}f}")
+                    lines.append(SEP)
+                    lines.append(f"{'Total':<{W}}:  =  {result_brut_orig:.{ns}f}")
+
             # Ligne volume (si épaisseur renseignée et formule non volumique)
             vl = _make_vol_line(expr_s, v, net_val, W, item_unit=unit)
             if vl:

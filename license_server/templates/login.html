@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Métraplan — Connexion Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 40px 44px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .logo h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #1565c0;
+    letter-spacing: -0.5px;
+  }
+  .logo p {
+    font-size: 0.8rem;
+    color: #90a4ae;
+    margin-top: 4px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #607d8b;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #cfd8dc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color .2s;
+    letter-spacing: 2px;
+    color: #263238;
+  }
+  input[type="password"]:focus {
+    border-color: #1565c0;
+    box-shadow: 0 0 0 3px rgba(21,101,192,.1);
+  }
+
+  .error {
+    background: #ffebee;
+    border: 1px solid #ef9a9a;
+    color: #c62828;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background: #1565c0;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 18px;
+    transition: background .2s;
+  }
+  button[type="submit"]:hover { background: #0d47a1; }
+  button[type="submit"]:active { background: #0a3880; }
+
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 0.75rem;
+    color: #b0bec5;
+  }
+
+  .lock-icon {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+    display: block;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <span class="lock-icon">🔑</span>
+    <h1>Métraplan</h1>
+    <p>Espace Administrateur</p>
+  </div>
+
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/login">
+    <label for="password">Mot de passe admin</label>
+    <input
+      type="password"
+      id="password"
+      name="password"
+      placeholder="••••••••••••••••"
+      autofocus
+      required
+    >
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <div class="footer">
+    © 2026 Métraplan — Accès réservé
+  </div>
+</div>
+</body>
+</html>

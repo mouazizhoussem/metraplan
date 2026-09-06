@@ -1,0 +1,34 @@
+# render.yaml — Configuration de déploiement pour Render.com
+# Docs : https://render.com/docs/blueprint-spec
+#
+# Ce fichier déploie automatiquement :
+#   - Un service Web (FastAPI)
+#   - Une base de données PostgreSQL gratuite (90 jours Render free tier)
+#
+# Pour déployer : connectez ce dépôt sur render.com → "Blueprint"
+
+services:
+  - type: web
+    name: metraplan-license-server
+    env: python
+    region: frankfurt        # choisir la région la plus proche de vos clients
+    plan: free               # free tier Render (512 MB RAM, spin-down après 15 min inactif)
+    rootDir: license_server  # sous-dossier du dépôt
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ADMIN_API_KEY
+        generateValue: true          # Render génère un secret aléatoire automatiquement
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: metraplan-db
+          property: connectionString
+
+databases:
+  - name: metraplan-db
+    databaseName: metraplan_licenses
+    user: metraplan
+    plan: free               # PostgreSQL gratuit (90 jours, puis 7$/mois)
