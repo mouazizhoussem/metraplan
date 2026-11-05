@@ -347,7 +347,12 @@ def verify(req: VerifyRequest):
         raise HTTPException(status_code=403, detail="Licence activée sur un autre PC")
 
     now = _now_iso()
-    db.update_last_check(key, now)
+    # Si la licence est inactive (machine_id non encore enregistré),
+    # l'enregistrer maintenant pour mettre le statut à "active" dans le dashboard
+    if not row.get("machine_id") or row["status"] == "inactive":
+        db.activate_license(key, req.machine_id, now)
+    else:
+        db.update_last_check(key, now)
     db.add_check_history(key, req.machine_id, now, "valid")
     # Émet toujours un nouveau token frais (renouvellement automatique)
     new_token = _make_token(key, req.machine_id, row["expires_at"], row["type"])
