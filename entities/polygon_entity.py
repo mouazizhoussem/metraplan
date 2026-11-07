@@ -19,9 +19,9 @@ class AnchorPoint(QGraphicsRectItem):  # ✅ CHANGÉ: RectItem au lieu de Ellips
 
     def __init__(self, x, y, index, parent_entity):
         # Tailles de base
-        base_visible_size = 16
-        base_click_size = 40
-        base_pen_width = 3
+        base_visible_size = 8
+        base_click_size = 18
+        base_pen_width = 2
         
         # ✅ NOUVEAU: Tailles scalées
         if hasattr(parent_entity, 'scale_manager') and parent_entity.scale_manager:
@@ -182,10 +182,29 @@ class AnchorPoint(QGraphicsRectItem):  # ✅ CHANGÉ: RectItem au lieu de Ellips
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """Relâchement"""
+        """Relâchement — snap-to-close si dernier handle près du premier."""
         if event.button() == Qt.LeftButton:
-            # Logs supprimés
             self.setSelected(False)
+
+            # ── Snap-to-close en mode édition ──────────────────────────────
+            SNAP_CLOSE_RADIUS = 15
+            pe = self.parent_entity
+            if (pe and hasattr(pe, 'points') and len(pe.points) >= 3 and
+                    self.index == len(pe.points) - 1):
+                import math
+                first = pe.points[0]
+                cur = self.pos()
+                dist = math.hypot(cur.x() - first.x(), cur.y() - first.y())
+                if dist < SNAP_CLOSE_RADIUS:
+                    # Snap : dernier point = premier point
+                    self.setPos(first)
+                    pe.points[-1] = QPointF(first.x(), first.y())
+                    # Remettre couleur normale du 1er handle
+                    if hasattr(pe, 'anchor_points') and pe.anchor_points:
+                        pe.anchor_points[0].setBrush(QColor(0, 0, 0))
+                    if hasattr(pe, 'scene_ref') and pe.scene_ref:
+                        pe.draw(pe.scene_ref)
+
         event.accept()
         super().mouseReleaseEvent(event)
 
@@ -1254,6 +1273,23 @@ class PolygonEntity(BaseEntity):
 
         if index < 0 or index >= len(self.points):
             return
+
+        # ── Feedback visuel snap-to-close : 1er handle vert si dernier point proche ──
+        SNAP_CLOSE_RADIUS = 15
+        last_index = len(self.points) - 1
+        if index == last_index and len(self.points) >= 3 and hasattr(self, 'anchor_points') and self.anchor_points:
+            import math
+            first = self.points[0]
+            dist = math.hypot(new_pos.x() - first.x(), new_pos.y() - first.y())
+            try:
+                if dist < SNAP_CLOSE_RADIUS:
+                    self.anchor_points[0].setBrush(QColor(0, 200, 0))
+                    self.anchor_points[0].setRect(-5, -5, 10, 10)
+                else:
+                    self.anchor_points[0].setBrush(QColor(0, 0, 0))
+                    self.anchor_points[0].setRect(-4, -4, 8, 8)
+            except Exception:
+                pass
 
         # Mettre à jour le point correspondant
         self.points[index] = QPointF(new_pos.x(), new_pos.y())

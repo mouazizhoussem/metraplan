@@ -30,6 +30,7 @@ from ui.report_generator import (
     generate_report, fmt_qty, type_label, ReportData,
     build_html_report, build_html_header, build_html_pages_section,
     build_html_global_section, build_html_bpu_recap_section,
+    build_html_devis_general_table, build_html_bpu_document,
     _rh_wrap, _rh_th, _rh_th_green, _rh_td, _rh_h2, _rh_h3,
     _number_to_words_fr, BpuLotRow, _decimals_for_unit,
 )
@@ -1883,23 +1884,21 @@ class ReportPanel(QWidget):
 
         if section == "devis":
             body = (header
-                    + build_html_pages_section(self._data)
-                    + build_html_global_section(self._data)
-                    + build_html_bpu_recap_section(self._data, page_break=True))
+                    + build_html_devis_general_table(self._data))
             return _rh_wrap(body)
 
         if section == "attachment":
             return self._build_att_html()
 
         if section == "bpu":
-            return self._bpu_browser.toHtml()
+            return build_html_bpu_document(self._data)
 
         if section == "all":
             att_html = self._build_att_html()
             body = (header
                     + build_html_pages_section(self._data)
                     + build_html_global_section(self._data)
-                    + build_html_bpu_recap_section(self._data, page_break=True))
+                    + build_html_devis_general_table(self._data))
             combined = _rh_wrap(body)
             if att_html:
                 combined = combined.replace(

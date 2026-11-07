@@ -154,6 +154,7 @@ def _collect_pages_payload(main_window) -> List[Dict[str, Any]]:
                 "index": idx,
                 "name": getattr(page, "name", "") or f"Page {idx + 1}",
                 "pixels_per_meter": float(getattr(page, "pixels_per_meter", 100.0) or 100.0),
+                "scale_calibrated": bool(getattr(page, "scale_calibrated", False)),
                 "entities_data": entities,
                 "pixmap_png_b64": _pixmap_to_b64(getattr(page, "pixmap", None)),
                 "thumbnail_png_b64": _pixmap_to_b64(getattr(page, "thumbnail", None)),
@@ -165,14 +166,19 @@ def _collect_pages_payload(main_window) -> List[Dict[str, Any]]:
 def _build_pages_from_payload(pages_raw: List[Dict[str, Any]]) -> List[PDFPage]:
     pages: List[PDFPage] = []
     for idx, raw in enumerate(pages_raw):
+        _ppm = float(raw.get("pixels_per_meter", 100.0) or 100.0)
         page = PDFPage(
             page_index=idx,
             name=raw.get("name", f"Page {idx + 1}"),
-            pixels_per_meter=float(raw.get("pixels_per_meter", 100.0) or 100.0),
+            pixels_per_meter=_ppm,
         )
         page.entities_data = raw.get("entities_data", []) or []
         page.pixmap = _b64_to_pixmap(raw.get("pixmap_png_b64"))
         page.thumbnail = _b64_to_pixmap(raw.get("thumbnail_png_b64"))
+        # Restaurer scale_calibrated.
+        # Fallback pour anciens .mtp (sans ce champ) : si pixels_per_meter ≠ 100.0
+        # c'est que la page avait été calibrée → on la considère calibrée.
+        page.scale_calibrated = raw.get("scale_calibrated", _ppm != 100.0)
         pages.append(page)
     return pages
 

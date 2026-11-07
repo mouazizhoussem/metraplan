@@ -380,8 +380,8 @@ class LineEntity(BaseEntity):
         mid_x = (self.start_point.x() + self.end_point.x()) / 2
         mid_y = (self.start_point.y() + self.end_point.y()) / 2
 
-        # Créer le texte
-        text = f"{self.name}\n{self.get_length_text()}"
+        # Créer le texte — afficher uniquement la mesure (sans le nom)
+        text = self.get_length_text()
         self.text_item = QGraphicsTextItem(text)
         
         # ✅ NOUVEAU: Appliquer un font scalé

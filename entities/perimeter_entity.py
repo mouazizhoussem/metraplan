@@ -236,10 +236,10 @@ class PerimeterAnchorPoint(QGraphicsRectItem):
     """Point d'ancrage pour l'édition du périmètre - VERSION ULTRA-AMÉLIORÉE"""
 
     def __init__(self, x, y, index, parent_entity):
-        # Tailles de base
-        base_visible_size = 16
-        base_click_size = 40
-        base_pen_width = 3
+        # Tailles de base — petites pour ne pas masquer les ouvertures
+        base_visible_size = 8
+        base_click_size = 18
+        base_pen_width = 2
 
         # ✅ NOUVEAU: Tailles scalées
         if hasattr(parent_entity, 'scale_manager') and parent_entity.scale_manager:
@@ -284,6 +284,18 @@ class PerimeterAnchorPoint(QGraphicsRectItem):
         # ✅ Forcer la capture des événements
         self.setFiltersChildEvents(False)
 
+    # ── Freeze / Unfreeze ──────────────────────────────────────────────────
+    def freeze(self):
+        """Rend le handle transparent aux clics (outil dessin actif)."""
+        self.setAcceptedMouseButtons(Qt.NoButton)
+        self.setAcceptHoverEvents(False)
+        self.setZValue(0)
+
+    def unfreeze(self):
+        """Réactive le handle (outil pointeur ou aucun outil)."""
+        self.setAcceptedMouseButtons(Qt.LeftButton)
+        self.setAcceptHoverEvents(True)
+        self.setZValue(10000)
 
     def shape(self):
         """
@@ -408,9 +420,32 @@ class PerimeterAnchorPoint(QGraphicsRectItem):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """Relâchement du handle"""
+        """Relâchement du handle — snap-to-close si dernier point près du premier."""
         if event.button() == Qt.LeftButton:
             self.setSelected(False)
+
+            # ── Snap-to-close en mode édition ──────────────────────────────
+            SNAP_CLOSE_RADIUS = 15
+            pe = self.parent_entity
+            if (pe and len(pe.points) >= 3 and
+                    self.index == len(pe.points) - 1):
+                import math
+                first = pe.points[0]
+                cur = self.pos()
+                dist = math.hypot(cur.x() - first.x(), cur.y() - first.y())
+                if dist < SNAP_CLOSE_RADIUS:
+                    # Snap : dernier point = premier point
+                    pe._suppress_anchor_move = True
+                    self.setPos(first)
+                    pe._suppress_anchor_move = False
+                    pe.points[-1] = QPointF(first.x(), first.y())
+                    # Remettre couleur normale du 1er handle
+                    if pe.anchor_points:
+                        pe.anchor_points[0].setBrush(QColor(0, 0, 0))
+                        pe.anchor_points[0].setPen(QPen(QColor(255, 255, 255), 2))
+                    if pe.scene_ref:
+                        pe.draw(pe.scene_ref)
+
         event.accept()
         super().mouseReleaseEvent(event)
 
@@ -1285,6 +1320,25 @@ class PerimeterEntity(BaseEntity):
         if self.linear_openings:
             pass
 
+    # ── Freeze / Unfreeze handles ──────────────────────────────────────────
+    def freeze_handles(self):
+        """Rend tous les handles transparents aux clics (outil dessin actif)."""
+        for anchor in list(self.anchor_points):
+            try:
+                if anchor and anchor.scene():
+                    anchor.freeze()
+            except Exception:
+                pass
+
+    def unfreeze_handles(self):
+        """Réactive tous les handles (outil pointeur ou aucun outil)."""
+        for anchor in list(self.anchor_points):
+            try:
+                if anchor and anchor.scene():
+                    anchor.unfreeze()
+            except Exception:
+                pass
+
     def create_anchor_points(self, scene):
         """Crée les points d'ancrage aux sommets du périmètre"""
 
@@ -1312,6 +1366,23 @@ class PerimeterEntity(BaseEntity):
             return
         if index < 0 or index >= len(self.points):
             return
+
+        # ── Feedback visuel snap-to-close : 1er handle devient vert ──────
+        SNAP_CLOSE_RADIUS = 15
+        last_index = len(self.points) - 1
+        if index == last_index and len(self.points) >= 3 and self.anchor_points:
+            import math
+            first = self.points[0]
+            dist = math.hypot(new_pos.x() - first.x(), new_pos.y() - first.y())
+            try:
+                if dist < SNAP_CLOSE_RADIUS:
+                    self.anchor_points[0].setBrush(QColor(0, 200, 0))
+                    self.anchor_points[0].setRect(-5, -5, 10, 10)
+                else:
+                    self.anchor_points[0].setBrush(QColor(0, 0, 0))
+                    self.anchor_points[0].setRect(-4, -4, 8, 8)
+            except Exception:
+                pass
 
         # Mettre à jour le point correspondant
         self.points[index] = QPointF(new_pos.x(), new_pos.y())

@@ -1,11 +1,11 @@
 ; =====================================================================
 ; Métraplan — Script d'installation Inno Setup
-; Version : 1.0.3
+; Version : 1.0.4
 ; Auteur  : M.Housse
 ; =====================================================================
 
 #define AppName      "Métraplan"
-#define AppVersion   "1.0.3"
+#define AppVersion   "1.0.4"
 #define AppPublisher "M.Housse"
 #define AppURL       "https://www.metraplan.com"
 #define AppExeName   "Metraplan.exe"

@@ -756,6 +756,359 @@ def build_html_global_section(rd: ReportData) -> str:
 </table>"""
 
 
+def _decimals_for_unit_rg(unit: str) -> int:
+    """Nombre de décimales à afficher selon l'unité."""
+    if unit in ("U", "u", "ENS", "ens", "Ens"):
+        return 0
+    return 2
+
+
+def _fmt_fr_rg(val: float, decimals: int = 2) -> str:
+    """Format numérique français : &nbsp; comme séparateur de milliers.
+    Utilise \\xa0 (U+00A0) plutôt que \\u202f : seul caractère non-sécable
+    fiable dans QTextDocument / QPrinter.
+    """
+    formatted = f"{val:,.{decimals}f}"
+    if "." in formatted:
+        int_part, dec_part = formatted.split(".")
+        int_part = int_part.replace(",", "\xa0")   # &nbsp; standard
+        return f"{int_part},{dec_part}"
+    return formatted.replace(",", "\xa0")
+
+
+def build_html_devis_general_table(rd: ReportData) -> str:
+    """HTML du Devis Général — reproduction fidèle du tableau à l'écran.
+
+    Colonnes : Désignation | Unité | Quantité | P.U. (DA) | Total (DA)
+    Mise en page identique au tableau affiché dans l'onglet Devis général.
+    table-layout:fixed garantit que les colonnes respectent leurs largeurs en PDF.
+    """
+    bpu = getattr(rd, "bpu", None)
+    if not bpu or not bpu.rows:
+        return "<p style='color:#78909c;font-style:italic;padding:10pt'>Aucun item de devis affecté.</p>"
+
+    rows_html = ""
+
+    for lot_id in bpu.lots:
+        rows_lot = bpu.rows_for_lot(lot_id)
+        if not rows_lot:
+            continue
+        lot_label = rows_lot[0].lot_label
+
+        # ── En-tête LOT (fond bleu clair, bordure gauche bleue foncée) ──────
+        rows_html += (
+            f"<tr style='background:#dde8f5'>"
+            f"<td colspan='5' style='padding:7pt 10pt;font-weight:bold;"
+            f"font-size:11pt;color:#0d47a1;border:1px solid #c8d4e8;"
+            f"border-left:4px solid #1565c0;white-space:normal'>"
+            f"{lot_label}</td></tr>"
+        )
+
+        # ── Lignes item ───────────────────────────────────────────────────────
+        for bpu_row in rows_lot:
+            has_pu  = bpu_row.prix_unitaire > 0
+            nd      = _decimals_for_unit_rg(bpu_row.unit)
+            qty_str = _fmt_fr_rg(bpu_row.qty_total, nd)
+            pu_str  = _fmt_fr_rg(bpu_row.prix_unitaire) if has_pu else "—"
+            tot_str = _fmt_fr_rg(bpu_row.total)         if has_pu else "—"
+            fg_pu   = "#424242" if has_pu else "#b0bec5"
+            fg_tot  = "#1b5e20" if has_pu else "#78909c"
+            fw_tot  = "bold"    if has_pu else "normal"
+
+            rows_html += (
+                f"<tr>"
+                f"<td style='padding:5pt 10pt 5pt 16pt;border:1px solid #e8eef8'>"
+                f"<span style='font-size:8.5pt;color:#607080'>{bpu_row.item_id}</span>"
+                f"&nbsp;&nbsp;{bpu_row.item_label}</td>"
+                f"<td style='padding:5pt 6pt;border:1px solid #e8eef8;"
+                f"text-align:center;color:#607080'>{bpu_row.unit}</td>"
+                f"<td style='padding:5pt 10pt;border:1px solid #e8eef8;"
+                f"text-align:right;color:#1565c0;font-weight:bold'>{qty_str}</td>"
+                f"<td style='padding:5pt 10pt;border:1px solid #e8eef8;"
+                f"text-align:right;color:{fg_pu}'>{pu_str}</td>"
+                f"<td style='padding:5pt 10pt;border:1px solid #e8eef8;"
+                f"text-align:right;color:{fg_tot};font-weight:{fw_tot}'>{tot_str}</td>"
+                f"</tr>"
+            )
+
+        # ── Sous-total LOT ────────────────────────────────────────────────────
+        st     = bpu.subtotal_lot(lot_id)
+        st_str = _fmt_fr_rg(st)
+        rows_html += (
+            f"<tr style='background:#f0f4fb'>"
+            f"<td colspan='4' style='border:1px solid #c8d4e8;padding:5pt 10pt;"
+            f"text-align:right;font-weight:bold;color:#424242;font-size:9pt'>"
+            f"Sous-total {lot_id}&nbsp;:</td>"
+            f"<td style='border:1px solid #c8d4e8;padding:5pt 10pt;"
+            f"text-align:right;font-weight:bold;color:#0d47a1;"
+            f"white-space:nowrap'>"
+            f"{st_str}&nbsp;DA</td></tr>"
+            f"<tr><td colspan='5' style='border:none;padding:3pt'></td></tr>"
+        )
+
+    # ── Séparateur ────────────────────────────────────────────────────────────
+    rows_html += (
+        "<tr><td colspan='5' style='background:#c8d4e8;height:2px;"
+        "border:none;padding:0'></td></tr>"
+        "<tr><td colspan='5' style='border:none;padding:3pt'></td></tr>"
+    )
+
+    # ── Totaux ────────────────────────────────────────────────────────────────
+    ht_str   = _fmt_fr_rg(bpu.total_ht)
+    tva_str  = _fmt_fr_rg(bpu.tva_amount)
+    ttc_str  = _fmt_fr_rg(bpu.total_ttc)
+    tva_rate = getattr(bpu, "tva_rate", 19.0)
+
+    _NW = "white-space:nowrap"   # forcer affichage sur 1 ligne pour les montants
+    rows_html += (
+        f"<tr style='background:#e3f2fd'>"
+        f"<td colspan='4' style='border:1px solid #bbdefb;padding:5pt 10pt;"
+        f"text-align:right;font-weight:bold;color:#0d47a1'>TOTAL HT&nbsp;:</td>"
+        f"<td style='border:1px solid #bbdefb;padding:5pt 10pt;"
+        f"text-align:right;font-weight:bold;color:#0d47a1;{_NW}'>{ht_str}&nbsp;DA</td>"
+        f"</tr>"
+        f"<tr style='background:#fff8e1'>"
+        f"<td colspan='4' style='border:1px solid #ffe082;padding:5pt 10pt;"
+        f"text-align:right;font-weight:bold;color:#e65100'>"
+        f"TVA {tva_rate:.0f}%&nbsp;:</td>"
+        f"<td style='border:1px solid #ffe082;padding:5pt 10pt;"
+        f"text-align:right;font-weight:bold;color:#e65100;{_NW}'>{tva_str}&nbsp;DA</td>"
+        f"</tr>"
+        f"<tr style='background:#e8f5e9'>"
+        f"<td colspan='4' style='border:2px solid #a5d6a7;padding:7pt 10pt;"
+        f"text-align:right;font-weight:bold;color:#1b5e20;font-size:11pt'>"
+        f"TOTAL TTC&nbsp;:</td>"
+        f"<td style='border:2px solid #a5d6a7;padding:7pt 10pt;"
+        f"text-align:right;font-weight:bold;color:#1b5e20;font-size:12pt;{_NW}'>"
+        f"{ttc_str}&nbsp;DA</td>"
+        f"</tr>"
+    )
+
+    # ── Montant en lettres ────────────────────────────────────────────────────
+    ttc_lettres = _number_to_words_fr(int(round(bpu.total_ttc)))
+
+    # ── Helper th avec attribut width HTML (seul moyen fiable avec QTextDocument) ──
+    def _dv_th(label, align="left", width=""):
+        w_attr = f"width='{width}'" if width else ""
+        return (f"<th {w_attr} style='background:#1565c0;color:#ffffff;"
+                f"padding:6pt 8pt;font-size:9pt;font-weight:bold;"
+                f"border:1px solid #0d47a1;text-align:{align};"
+                f"white-space:nowrap'>{label}</th>")
+
+    return f"""
+{_rh_h2("Devis Général")}
+<table width="100%" style="border-collapse:collapse;table-layout:fixed;margin-bottom:20px">
+  <thead>
+    <tr>
+      {_dv_th("Désignation",  align="left",  width="43%")}
+      {_dv_th("U.",           align="center",width="6%")}
+      {_dv_th("Quantité",     align="right", width="11%")}
+      {_dv_th("P.U. (DA)",    align="right", width="18%")}
+      {_dv_th("Total (DA)",   align="right", width="22%")}
+    </tr>
+  </thead>
+  <tbody>{rows_html}</tbody>
+</table>
+<p style="margin-top:14px;font-style:italic;color:#37474f;font-size:10pt;
+          border-top:1px solid #ccc;padding-top:12px">
+  <b>Arrêté le présent devis à la somme de&nbsp;:</b><br/>
+  {ttc_lettres} dinars algériens (T.T.C.)
+</p>"""
+
+
+def build_html_bpu_document(rd: ReportData) -> str:
+    """HTML du B.P.U. complet pour export PDF.
+
+    Approche 100% tableaux, sans <div>, sans <br/> dans les cellules —
+    entièrement compatible avec QTextDocument / QPrinter.
+    Colonnes : N° | Désignation | Prix en lettres | U. | Quantité | P.U. | Montant
+    """
+    bpu = getattr(rd, "bpu", None)
+    if not bpu or not bpu.rows:
+        return _rh_wrap("<p style='color:#78909c;font-style:italic'>Aucun item BPU.</p>")
+
+    meta  = getattr(rd, "metadata", {}) or {}
+    today = __import__("datetime").date.today().strftime("%d/%m/%Y")
+    tva   = getattr(bpu, "tva_rate", 19.0)
+
+    # ── Styles communs ────────────────────────────────────────────────────────
+    _BD  = "border:1px solid #c8e6c9"
+    _BDG = "border:1px solid #a5d6a7"
+    _PAD = "padding:5pt 7pt"
+
+    # ── En-tête projet ────────────────────────────────────────────────────────
+    hdr_rows = ""
+    for label, key in [
+        ("Projet",           "name"),
+        ("N° de projet",     "number"),
+        ("Maître d'ouvrage", "owner"),
+        ("Maître d'œuvre",   "architect"),
+        ("Entreprise",       "company"),
+        ("Date",             "date"),
+    ]:
+        v = meta.get(key, "")
+        if v:
+            hdr_rows += (
+                f"<tr>"
+                f"<td style='color:#546e7a;{_PAD};width:150pt'>{label}</td>"
+                f"<td style='font-weight:bold;{_PAD};color:#1a1a2e'>{v}</td>"
+                f"</tr>"
+            )
+
+    # ── Tableau principal : un seul grand tableau pour tout le BPU ───────────
+    # Structure :
+    #   • Ligne en-tête colonne (répétée via <thead>)
+    #   • Pour chaque LOT :
+    #       - Ligne titre LOT (colspan 7)
+    #       - Pour chaque article : 1 ligne données + 1 ligne prix en lettres
+    #       - Ligne sous-total LOT
+    # Avantage : un seul tableau = aucun problème de <div> avec QTextDocument.
+
+    thead = (
+        "<thead><tr>"
+        "<th width='8%'  style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:left;font-size:9pt'>N°</th>"
+        "<th width='30%' style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:left;font-size:9pt'>Désignation</th>"
+        "<th width='5%'  style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:center;font-size:9pt'>U.</th>"
+        "<th width='10%' style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:right;font-size:9pt'>Quantité</th>"
+        "<th width='14%' style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:right;font-size:9pt'>P.U. (DA)</th>"
+        "<th width='16%' style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:right;font-size:9pt'>Montant (DA)</th>"
+        "<th width='17%' style='background:#1b5e20;color:#fff;{p};border:1px solid #2e7d32;"
+        "text-align:left;font-size:9pt'>Montant en lettres</th>"
+        "</tr></thead>"
+    ).format(p=_PAD)
+
+    tbody = ""
+    for lot_id in bpu.lots:
+        rows = bpu.rows_for_lot(lot_id)
+        if not rows:
+            continue
+        lot_label = rows[0].lot_label
+
+        # Ligne titre LOT
+        tbody += (
+            f"<tr>"
+            f"<td colspan='7' style='background:#c8e6c9;{_PAD};"
+            f"font-weight:bold;font-size:11pt;color:#1b5e20;"
+            f"border:1px solid #a5d6a7;border-left:4pt solid #2e7d32'>"
+            f"LOT {lot_label}</td>"
+            f"</tr>"
+        )
+
+        alt = False
+        for row in rows:
+            pu    = row.prix_unitaire
+            qty   = row.qty_total
+            total = row.total
+            nd    = _decimals_for_unit_rg(row.unit)
+            bg    = "#fafafa" if alt else "#ffffff"
+            alt   = not alt
+
+            pu_str    = _fmt_fr_rg(pu)    if pu > 0    else "—"
+            qty_str   = _fmt_fr_rg(qty, nd)
+            total_str = _fmt_fr_rg(total) if total > 0 else "—"
+            tot_lettres = (
+                _number_to_words_fr(int(round(total))).capitalize() + " DA"
+                if total > 0 else "—"
+            )
+            fg_tot  = "#1b5e20" if total > 0 else "#78909c"
+            fw_tot  = "bold"    if total > 0 else "normal"
+
+            tbody += (
+                f"<tr>"
+                f"<td style='background:{bg};{_PAD};{_BD};"
+                f"font-weight:bold;color:#4a148c;font-size:9pt'>{row.item_id}</td>"
+                f"<td style='background:{bg};{_PAD};{_BD};font-size:9.5pt'>{row.item_label}</td>"
+                f"<td style='background:{bg};{_PAD};{_BD};"
+                f"text-align:center;color:#607080'>{row.unit}</td>"
+                f"<td style='background:{bg};{_PAD};{_BD};"
+                f"text-align:right;font-weight:bold;color:#1565c0'>{qty_str}</td>"
+                f"<td style='background:{bg};{_PAD};{_BD};"
+                f"text-align:right;color:#424242'>{pu_str}</td>"
+                f"<td style='background:{bg};{_PAD};{_BD};"
+                f"text-align:right;font-weight:{fw_tot};color:{fg_tot}'>{total_str}</td>"
+                f"<td style='background:{bg};{_PAD};{_BD};"
+                f"font-style:italic;color:#555;font-size:8.5pt'>{tot_lettres}</td>"
+                f"</tr>"
+            )
+
+        # Sous-total LOT
+        st     = bpu.subtotal_lot(lot_id)
+        st_str = _fmt_fr_rg(st)
+        tbody += (
+            f"<tr>"
+            f"<td colspan='5' style='background:#f1f8e9;{_PAD};{_BDG};"
+            f"text-align:right;font-weight:bold;color:#2e7d32;font-size:9pt'>"
+            f"Sous-total LOT {lot_id}</td>"
+            f"<td style='background:#f1f8e9;{_PAD};{_BDG};"
+            f"text-align:right;font-weight:bold;color:#1b5e20'>{st_str}&nbsp;DA</td>"
+            f"<td style='background:#f1f8e9;{_PAD};{_BDG}'></td>"
+            f"</tr>"
+            f"<tr><td colspan='7' style='border:none;padding:4pt'></td></tr>"
+        )
+
+    # ── Totaux ────────────────────────────────────────────────────────────────
+    ht_str      = _fmt_fr_rg(bpu.total_ht)
+    tva_str     = _fmt_fr_rg(bpu.tva_amount)
+    ttc_str     = _fmt_fr_rg(bpu.total_ttc)
+    ttc_lettres = _number_to_words_fr(int(round(bpu.total_ttc))).capitalize()
+
+    totaux = (
+        f"<tr>"
+        f"<td colspan='5' style='background:#e3f2fd;{_PAD};"
+        f"border:1px solid #bbdefb;text-align:right;"
+        f"font-weight:bold;color:#0d47a1'>TOTAL HORS TAXE</td>"
+        f"<td style='background:#e3f2fd;{_PAD};border:1px solid #bbdefb;"
+        f"text-align:right;font-weight:bold;color:#0d47a1'>{ht_str}&nbsp;DA</td>"
+        f"<td style='background:#e3f2fd;border:1px solid #bbdefb;{_PAD}'></td>"
+        f"</tr>"
+        f"<tr>"
+        f"<td colspan='5' style='background:#fff8e1;{_PAD};"
+        f"border:1px solid #ffe082;text-align:right;"
+        f"font-weight:bold;color:#e65100'>TVA {tva:.0f}%</td>"
+        f"<td style='background:#fff8e1;{_PAD};border:1px solid #ffe082;"
+        f"text-align:right;font-weight:bold;color:#e65100'>{tva_str}&nbsp;DA</td>"
+        f"<td style='background:#fff8e1;border:1px solid #ffe082;{_PAD}'></td>"
+        f"</tr>"
+        f"<tr>"
+        f"<td colspan='5' style='background:#e8f5e9;{_PAD};"
+        f"border:2px solid #2e7d32;text-align:right;"
+        f"font-weight:bold;color:#1b5e20;font-size:11pt'>MONTANT TOTAL T.T.C.</td>"
+        f"<td style='background:#e8f5e9;{_PAD};border:2px solid #2e7d32;"
+        f"text-align:right;font-weight:bold;color:#1b5e20;font-size:11pt'>{ttc_str}&nbsp;DA</td>"
+        f"<td style='background:#e8f5e9;border:2px solid #2e7d32;{_PAD};"
+        f"font-style:italic;color:#1b5e20;font-size:9pt'>"
+        f"{ttc_lettres} dinars (T.T.C.)</td>"
+        f"</tr>"
+    )
+
+    body = f"""
+{_rh_h2("BORDEREAU DES PRIX UNITAIRES", color="#1b5e20",
+         bg="#e8f5e9", accent="#2e7d32", page_break=False)}
+<p style="color:#78909c;font-size:9pt;margin:0 0 10pt 0">
+  Métraplan &mdash; Généré le {today}
+</p>
+<table style="border-collapse:collapse;margin-bottom:14pt;
+              border-left:4pt solid #1b5e20;background:#f1f8e9">
+  {hdr_rows}
+</table>
+<table width="100%" style="border-collapse:collapse;table-layout:fixed;margin-bottom:16pt">
+  {thead}
+  <tbody>{tbody}{totaux}</tbody>
+</table>
+<p style="font-size:10pt;color:#1a1a2e;border-top:1px solid #a5d6a7;padding-top:10pt">
+  <b>Arrêté le présent bordereau à la somme de&nbsp;:</b>
+  &nbsp;&nbsp;<i style="color:#1b5e20">{ttc_lettres} dinars algériens (T.T.C.)</i>
+</p>"""
+
+    return _rh_wrap(body)
+
+
 def build_html_bpu_recap_section(rd: ReportData, page_break: bool = True) -> str:
     """HTML de la section récapitulatif BPU financier."""
     bpu = rd.bpu

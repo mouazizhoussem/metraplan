@@ -450,9 +450,9 @@ class LegendWidget(QGraphicsRectItem):
 
             if is_visible:
                 # Filtrer les types non pertinents pour la légende
-                # (ouvertures et distances — toujours à 0.00)
+                # (ouvertures, distances et lignes — toujours à 0.00 ou non pertinents)
                 entity_type = getattr(entity, 'entity_type', '')
-                if entity_type in ('opening', 'distance'):
+                if entity_type in ('opening', 'distance', 'line'):
                     continue
 
                 # Ignorer les surfaces enfants (elles seront comptées avec leur parent)

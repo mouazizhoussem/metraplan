@@ -277,17 +277,9 @@ class PerimeterTool:
         except Exception as e:
             return False
 
-        # Ne bloquer le clic sur un périmètre existant que si aucun dessin n'est en cours
-        if not self.points:
-            for item in items:
-                if not hasattr(item, 'data'):
-                    continue
-                try:
-                    if (item.data(0) == "perimeter_entity" and
-                            hasattr(self.canvas, "entity_manager")):
-                        return False
-                except (TypeError, AttributeError):
-                    continue
+        # Ne plus bloquer le clic sur un périmètre existant :
+        # l'outil est actif → l'utilisateur peut commencer un nouveau tracé
+        # depuis n'importe quel point, y compris une intersection sur un périmètre existant.
 
         # Si on est en mode édition, laisser les handles gérer les clics
         if self.perimeter_entity and hasattr(self.perimeter_entity, 'is_editing') and self.perimeter_entity.is_editing:
@@ -308,6 +300,15 @@ class PerimeterTool:
                 final_pos = get_ortho_point(self.points[-1], pos)
             else:
                 final_pos = pos
+
+            # ── Snap-to-close : fermer le périmètre si clic près du 1er point ──
+            SNAP_CLOSE_RADIUS = 15  # pixels scène
+            if (len(self.points) >= 3 and self.start_point and
+                    is_too_close(self.start_point, final_pos, SNAP_CLOSE_RADIUS)):
+                # Ajouter le point de départ comme dernier point pour fermer
+                self.points.append(self.start_point)
+                self.finish_perimeter()
+                return True
 
             # ✅ NOUVEAU: Vérifier que le point n'est pas trop proche du dernier
             MIN_DISTANCE = 5  # Distance minimale en pixels
@@ -412,6 +413,24 @@ class PerimeterTool:
                 QPen(QColor(0, 255, 0), 2, Qt.DashLine))
             self.current_temp_line.setData(0, "perimeter_temp_line")
             self.canvas.scene.addItem(self.current_temp_line)
+
+            # ── Feedback visuel snap-to-close : 1er point en vert si curseur proche ──
+            SNAP_CLOSE_RADIUS = 15
+            if (len(self.points) >= 3 and self.start_point and
+                    self.point_items):
+                near_start = is_too_close(self.start_point, final_pos, SNAP_CLOSE_RADIUS)
+                try:
+                    if near_start:
+                        # Vert + plus grand pour indiquer la fermeture possible
+                        self.point_items[0].setBrush(QBrush(QColor(0, 200, 0)))
+                        self.point_items[0].setRect(-5, -5, 10, 10)
+                    else:
+                        # Remettre en rouge normal
+                        self.point_items[0].setBrush(QBrush(QColor(255, 0, 0)))
+                        self.point_items[0].setRect(-3, -3, 6, 6)
+                except Exception:
+                    pass
+
             if self.points and self.labels_visible:
                 # Bulles des segments validés (inchangés) + prévisualisation unique du segment courant
                 self._rebuild_labels()
@@ -766,7 +785,7 @@ class PerimeterTool:
         self.start_point = None
         self.last_point = None
         self.perimeter_entity = None
-        self.labels_visible = True
+        # labels_visible intentionnellement NON réinitialisé : l'utilisateur garde le contrôle
 
     def cleanup_temp_elements(self):
         """Nettoie tous les éléments temporaires (y compris les handles)"""

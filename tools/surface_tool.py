@@ -247,6 +247,13 @@ class SurfaceTool(BaseTool):
                 else:
                     final_pos = pos
 
+                # ── Snap-to-close : fermer la surface si clic près du 1er point ──
+                SNAP_CLOSE_RADIUS = 15
+                if (len(self.points) >= 3 and self.start_point and
+                        is_too_close(self.start_point, final_pos, SNAP_CLOSE_RADIUS)):
+                    self.finish_surface()
+                    return True
+
                 MIN_DISTANCE = 5
                 if self.points and is_too_close(self.points[-1], final_pos, MIN_DISTANCE):
                     return True
@@ -351,6 +358,20 @@ class SurfaceTool(BaseTool):
                 QPen(QColor(255, 0, 0), 2, Qt.DashLine))
             self.current_temp_line.setData(0, "surface_temp_line")
             self.canvas.scene.addItem(self.current_temp_line)
+
+            # ── Feedback visuel snap-to-close : 1er point vert si curseur proche ──
+            SNAP_CLOSE_RADIUS = 15
+            if len(self.points) >= 3 and self.start_point and self.point_items:
+                near_start = is_too_close(self.start_point, final_pos, SNAP_CLOSE_RADIUS)
+                try:
+                    if near_start:
+                        self.point_items[0].setBrush(QBrush(QColor(0, 200, 0)))
+                        self.point_items[0].setRect(-5, -5, 10, 10)
+                    else:
+                        self.point_items[0].setBrush(QBrush(QColor(255, 0, 0)))
+                        self.point_items[0].setRect(-3, -3, 6, 6)
+                except Exception:
+                    pass
 
             # Détection d'angles droits EN TEMPS RÉEL
             if len(self.points) >= 3:
@@ -711,7 +732,7 @@ class SurfaceTool(BaseTool):
         self.start_point = None
         self.last_point = None
         self.mode = None
-        self.labels_visible = True
+        # labels_visible intentionnellement NON réinitialisé : l'utilisateur garde le contrôle
         self.cleanup_temp_elements()
 
     def start_editing(self, entity):

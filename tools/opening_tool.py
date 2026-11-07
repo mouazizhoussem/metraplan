@@ -38,13 +38,30 @@ class OpeningTool(BaseTool):
 
         # Mesures dynamiques (mêmes bulles que périmètre/surface)
         self.label_helper = SegmentLabelHelper(canvas, text_color="#AA0000")
+        # Touche L : afficher/masquer les bulles pendant le tracé
+        self.labels_visible = True
+
+    def key_press(self, event):
+        """Touche L : afficher/masquer les bulles de mesure pendant le tracé."""
+        if self.is_active and event.key() == Qt.Key_L:
+            self.labels_visible = not self.labels_visible
+            if not self.labels_visible:
+                self.label_helper.clear_all()
+            # Si réactivé, la prochaine souris_move recréera la bulle automatiquement
+            if hasattr(self.canvas, 'parent_window') and hasattr(self.canvas.parent_window, "measure_label"):
+                state = "visibles" if self.labels_visible else "masquées"
+                self.canvas.parent_window.measure_label.setText(
+                    f"Bulles de mesure {state} (L pour basculer)"
+                )
+            return True
+        return False
 
     def activate(self):
         """Active l'outil ouverture"""
         super().activate()
         if hasattr(self.canvas, 'parent_window') and hasattr(self.canvas.parent_window, "measure_label"):
             self.canvas.parent_window.measure_label.setText(
-                "Ouverture: Drag = Rectangle | Clics = Polygone | Clic droit = Terminer"
+                "Ouverture: Drag = Rectangle | Clics = Polygone | Clic droit = Terminer | L = bulles"
             )
 
     def mouse_press(self, event, pos):
@@ -263,8 +280,11 @@ class OpeningTool(BaseTool):
                 QPen(Qt.red, 1, Qt.DashLine)
             )
             self.temp_line.setZValue(1000)
-            # ✅ Étiquette de mesure en temps réel, centrée sur le segment rouge
-            self.label_helper.set_preview(last_point, pos)
+            # Étiquette de mesure en temps réel (uniquement si bulles activées)
+            if self.labels_visible:
+                self.label_helper.set_preview(last_point, pos)
+            else:
+                self.label_helper.clear_preview()
         else:
             # Pas de point ⇒ aucune prévisualisation
             self.label_helper.clear_preview()
@@ -427,10 +447,11 @@ class OpeningTool(BaseTool):
         self.points = []
         self.click_start_pos = None
         self.has_moved = False
+        # labels_visible intentionnellement NON réinitialisé : l'utilisateur garde le contrôle
 
         if hasattr(self.canvas, 'parent_window') and hasattr(self.canvas.parent_window, "measure_label"):
             self.canvas.parent_window.measure_label.setText(
-                "Ouverture: Drag = Rectangle | Clics = Polygone | Clic droit = Terminer"
+                "Ouverture: Drag = Rectangle | Clics = Polygone | Clic droit = Terminer | L = bulles"
             )
 
     # ------------------------------------------------------------------

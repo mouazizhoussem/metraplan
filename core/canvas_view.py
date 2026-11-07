@@ -162,12 +162,42 @@ class CanvasView(QGraphicsView):
             success = self.tool_manager.activate_tool(tool_name)
             if not success:
                 pass
+            # Freeze handles quand un outil de dessin est actif
+            self._update_handles_for_tool(tool_name)
         elif mode == "idle":
             self.tool_manager.deactivate_all_tools()
             # Remettre le curseur flèche si on n'est pas en mode pan
             if not self._pan_mode_active:
                 self.setCursor(Qt.ArrowCursor)
+            # Unfreeze handles quand aucun outil n'est actif
+            self._update_handles_for_tool(None)
         else:
+            pass
+
+    def _update_handles_for_tool(self, tool_name):
+        """Freeze/unfreeze les handles des périmètres selon l'outil actif.
+        Seul le mode pointeur (ou aucun outil) permet d'interagir avec les handles.
+        Robuste aux changements de page / chargements de PDF.
+        """
+        try:
+            is_pointer = tool_name in (None, '', 'pointer', 'idle')
+            manager = getattr(self, 'entity_manager', None)
+            if not manager:
+                return
+            # list() pour copie sûre — évite les crashes si entity_manager
+            # modifie la collection pendant le chargement d'un plan PDF
+            for entity in list(manager.get_all_entities()):
+                try:
+                    if getattr(entity, 'entity_type', '') == 'perimeter':
+                        if is_pointer:
+                            if hasattr(entity, 'unfreeze_handles'):
+                                entity.unfreeze_handles()
+                        else:
+                            if hasattr(entity, 'freeze_handles'):
+                                entity.freeze_handles()
+                except Exception:
+                    pass
+        except Exception:
             pass
 
     def load_image(self, file_path):
@@ -1122,6 +1152,8 @@ class CanvasView(QGraphicsView):
     def cancel_all_tools(self):
         """Désactive complètement tous les outils (ancien comportement ESC)"""
         self.tool_manager.deactivate_all_tools()
+        # Réactiver les handles quand aucun outil n'est actif
+        self._update_handles_for_tool(None)
 
         if hasattr(self.parent_window, "measure_label"):
             self.parent_window.measure_label.setText("Outil désactivé")
