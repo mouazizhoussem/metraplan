@@ -960,6 +960,51 @@ class DevisLibraryPanel(QWidget):
         combo_unit = QComboBox()
         combo_unit.addItems(_UNITS)
         combo_unit.setEditable(True)
+        combo_unit.setStyleSheet("""
+            QComboBox {
+                background-color: #ffffff;
+                color: #1e2130;
+                border: 1px solid #b8c8dc;
+                border-radius: 5px;
+                padding: 4px 8px;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 24px;
+                background-color: #e8f0fe;
+                border-left: 1px solid #b8c8dc;
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+            }
+            QComboBox::down-arrow {
+                image: url(assets/icons/arrow_down.svg);
+                width: 10px;
+                height: 6px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #ffffff;
+                color: #1e2130;
+                selection-background-color: #1976d2;
+                selection-color: #ffffff;
+                border: 1px solid #c8d4e0;
+                outline: 0;
+            }
+            QComboBox QAbstractItemView::item {
+                background-color: #ffffff;
+                color: #1e2130;
+                padding: 5px 10px;
+                min-height: 24px;
+            }
+            QComboBox QAbstractItemView::item:hover {
+                background-color: #e3f0ff;
+                color: #1e2130;
+            }
+            QComboBox QAbstractItemView::item:selected {
+                background-color: #1976d2;
+                color: #ffffff;
+            }
+        """)
         form.addRow("Unité :", combo_unit)
 
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)

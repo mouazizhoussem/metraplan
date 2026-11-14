@@ -845,6 +845,15 @@ class ReportPanel(QWidget):
                 _has_ded_mm  = any(dv in _expr_mm for dv in _DEDUCTION_VARS_MM)
                 _SN_COMP_MM  = _is_cmp_mm and "surface_nette" in _expr_mm and not _has_ded_mm
                 _DEQ_COMP_MM = _is_cmp_mm and _has_ded_mm and "surface_brute" in _expr_mm
+                # Cas 3 : formule composite utilisant surface_brute / perimetre_surface
+                # sans déduction ni surface_nette (ex: béton de propreté)
+                _SB_COMP_MM  = (_is_cmp_mm
+                                and not _SN_COMP_MM and not _DEQ_COMP_MM
+                                and any(nm in _expr_mm for nm in (
+                                    "surface_brute", "perimetre_surface",
+                                    "longueur_brute", "longueur_nette",
+                                    "nombre_bouts",
+                                )))
 
                 if _SN_COMP_MM or _DEQ_COMP_MM:
                     # Substituer les variables pour obtenir le display et le total de la formule
@@ -876,23 +885,41 @@ class ReportPanel(QWidget):
                         lines.append(SEP)
                         lines.append(f"{'Total':<{W_m}}:  =  {_total_mm:.{ns}f}")
 
-                # Ligne volume
-                net_for_vol = total_nette if total_nette < total_brute else total_brute
-                vl = _make_vol_line(expr.strip(), v, net_for_vol, W_m, item_unit=unit)
-                if vl:
-                    lines.append(vl)
-                else:
-                    # Formules volumiques : calculer directement la ligne volume
-                    ex_mm = expr.strip()
-                    e_mm  = round(float(v.get("epaisseur", 0.0) or 0.0), 2)
-                    h_mm  = round(float(v.get("hauteur",   0.0) or 0.0), 2)
-                    if net_for_vol > 0:
-                        if ex_mm in ("volume", "volume_dalle", "volume_mur") and e_mm > 0:
-                            vol_mm = round(net_for_vol * e_mm, 3)
-                            lines.append(
-                                f"{'Volume':<{W_m}}: {net_for_vol:.{ns}f} × {e_mm:.2f}"
-                                f"  =  {vol_mm:.3f} m³")
+                elif _SB_COMP_MM:
+                    # Formule composite générale (béton de propreté, débords, etc.)
+                    # Substituer TOUTES les variables et afficher la formule complète
+                    display_mm = _expr_mm
+                    for _nm in sorted(_ALLOWED_NAMES, key=len, reverse=True):
+                        _vv = v.get(_nm)
+                        if _vv is not None and _nm in display_mm:
+                            display_mm = display_mm.replace(_nm, f"{float(_vv):.{ns}f}")
+                    try:
+                        _norm_mm  = display_mm.replace("×", "*").replace("÷", "/")
+                        _total_mm = float(eval(_norm_mm, {"__builtins__": {}}, {}))  # noqa: S307
+                    except Exception:
+                        _total_mm = None
+                    if _total_mm is not None:
+                        lines.append(SEP)
+                        lines.append(f"{display_mm}  =  {_total_mm:.{nd}f}")
 
+                # Ligne volume — seulement si formule NON composite (cas standard)
+                _skip_vol_mm = _SB_COMP_MM
+                if not _skip_vol_mm:
+                    net_for_vol = total_nette if total_nette < total_brute else total_brute
+                    vl = _make_vol_line(expr.strip(), v, net_for_vol, W_m, item_unit=unit)
+                    if vl:
+                        lines.append(vl)
+                    else:
+                        # Formules volumiques : calculer directement la ligne volume
+                        ex_mm = expr.strip()
+                        e_mm  = round(float(v.get("epaisseur", 0.0) or 0.0), 2)
+                        h_mm  = round(float(v.get("hauteur",   0.0) or 0.0), 2)
+                        if net_for_vol > 0:
+                            if ex_mm in ("volume", "volume_dalle", "volume_mur") and e_mm > 0:
+                                vol_mm = round(net_for_vol * e_mm, 3)
+                                lines.append(
+                                    f"{'Volume':<{W_m}}: {net_for_vol:.{ns}f} × {e_mm:.2f}"
+                                    f"  =  {vol_mm:.3f} m³")
                 return expr.strip(), "\n".join(lines)
 
             # ── Branche surface unique (comportement existant) ─────────────────

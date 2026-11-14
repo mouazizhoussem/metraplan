@@ -125,6 +125,8 @@ def build_variables(entity) -> Dict[str, float]:
         # Compteur (point)
         "nombre":                        0.0,
         "longueur_unitaire":             0.0,
+        # Polygon : coins totaux du groupe
+        "nombre_bouts":                  0.0,
     }
 
     # ── Surfaces ─────────────────────────────────────────────────────────────
@@ -216,6 +218,9 @@ def build_variables(entity) -> Dict[str, float]:
             deduct = _P.add(deduct, b - n_net,  _P_SRF)
 
         vol_dalle = _rv(_P.mul(nette, thick, _P_VOL)) if thick > 0 else 0.0
+        # Nombre total de coins (sommets) sur toutes les semelles du groupe
+        # ex: 3 semelles rectangulaires → 3 × 4 = 12 | 1 semelle en L → 6
+        nb_bouts = sum(len(getattr(m, "points", []) or []) for m in members)
         vars_.update({
             "surface_brute":        _rs(brute),
             "surface_nette":        _rs(nette),
@@ -224,6 +229,8 @@ def build_variables(entity) -> Dict[str, float]:
             "deduction_ouvertures": _rs(deduct),
             "volume":               vol_dalle,   # surface_nette × epaisseur
             "volume_dalle":         vol_dalle,   # alias rétro-compatible
+            "nombre":               float(len(members)),  # nb de semelles dans le groupe
+            "nombre_bouts":         float(nb_bouts),      # nb total de coins de toutes les semelles
         })
 
     # ── Périmètres ───────────────────────────────────────────────────────────
@@ -379,6 +386,7 @@ _ALLOWED_NAMES = {
     "surface_brute_mur", "surface_deduction_ouvertures", "surface_nette_mur",
     "hauteur", "epaisseur", "nombre", "longueur_unitaire",
     "surface_compteur", "volume_compteur",
+    "nombre_bouts",
 }
 
 
@@ -563,10 +571,16 @@ VARIABLE_DESCRIPTIONS: Dict[str, Dict[str, str]] = {
         "desc":  "Épaisseur e (surface/périmètre) — Côté b de la section (compteur)",
     },
     "nombre": {
-        "label": "Nombre",
+        "label": "Nombre de semelles",
         "unit":  "U",
-        "types": "point",
-        "desc":  "Nombre d'éléments dans le groupe",
+        "types": "polygon point",
+        "desc":  "Polygone : nombre de semelles/surfaces dans le groupe  |  Compteur : nombre d'éléments",
+    },
+    "nombre_bouts": {
+        "label": "Nombre de coins (bouts)",
+        "unit":  "U",
+        "types": "polygon",
+        "desc":  "Nombre total de coins de toutes les semelles du groupe — rectangle=4, L=6, T=8... ex: 3 semelles rect. → 12 coins",
     },
     "longueur_unitaire": {
         "label": "Côté  a (section)",

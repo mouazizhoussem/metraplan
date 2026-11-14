@@ -71,7 +71,7 @@ def _border_thin():
 
 
 def _num_fmt(value: float) -> str:
-    """Format français : 30 000,00"""
+    """Format français : 30 000,00  — USAGE DISPLAY UNIQUEMENT (pas pour cellules Excel)."""
     try:
         f = f"{value:,.2f}"
         int_p, dec_p = f.split(".")
@@ -79,6 +79,11 @@ def _num_fmt(value: float) -> str:
         return f"{int_p},{dec_p}"
     except Exception:
         return str(value)
+
+
+# Formats numériques Excel (valeur float stockée → affichage avec séparateur millaires)
+_XL_FMT_NUM   = '#,##0.00'          # nombre seul  ex: 1 500,00
+_XL_FMT_DA    = '#,##0.00" DA"'     # avec suffixe ex: 1 500,00 DA
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -174,15 +179,17 @@ def export_devis_xlsx(panel: "ReportPanel", path: str) -> None:
             total = bpu_row.total
             nd    = 3 if (bpu_row.unit or "").strip().lower() in ("m³", "m3") else 2
 
-            vals = [
+            # P.U. et Total : float pour permettre les formules Excel (=C*D)
+            vals   = [
                 desig,
                 bpu_row.unit,
                 round(bpu_row.qty_total, nd),
-                _num_fmt(pu) if pu > 0 else "",
-                _num_fmt(total) if pu > 0 else "—",
+                pu    if pu > 0 else "",   # float → nombre Excel
+                total if pu > 0 else "—",  # float → nombre Excel
             ]
+            fmts   = [None, None, None, _XL_FMT_NUM, _XL_FMT_NUM]
             aligns = ["left", "center", "right", "right", "right"]
-            for col, (val, al) in enumerate(zip(vals, aligns), 1):
+            for col, (val, al, fmt) in enumerate(zip(vals, aligns, fmts), 1):
                 c = ws.cell(row=row, column=col, value=val)
                 c.fill  = _fill(_ART_BG)
                 c.font  = _font(size=10,
@@ -190,7 +197,9 @@ def export_devis_xlsx(panel: "ReportPanel", path: str) -> None:
                                       "FF1B5E20" if col == 5 and pu > 0 else
                                       "FF424242")
                 c.alignment = _align(al)
-                c.border = _border_thin()
+                c.border    = _border_thin()
+                if fmt:
+                    c.number_format = fmt
             row += 1
 
         # Sous-total lot
@@ -202,7 +211,8 @@ def export_devis_xlsx(panel: "ReportPanel", path: str) -> None:
         c3 = ws.cell(row=row, column=4, value=f"Sous-total {lot_id} :")
         c3.font = _font(bold=True, size=10, color="FF0D47A1")
         c3.alignment = _align("right")
-        c4 = ws.cell(row=row, column=5, value=_num_fmt(st) + " DA")
+        c4 = ws.cell(row=row, column=5, value=st)   # float
+        c4.number_format = _XL_FMT_DA
         c4.font = _font(bold=True, size=10, color="FF0D47A1")
         c4.alignment = _align("right")
         row += 1
@@ -229,9 +239,10 @@ def export_devis_xlsx(panel: "ReportPanel", path: str) -> None:
         ws.cell(row=row, column=4,
                 value=label).font = _font(bold=True, size=sz, color=fg)
         ws.cell(row=row, column=4).alignment = _align("right")
-        ws.cell(row=row, column=5,
-                value=_num_fmt(val) + " DA").font = _font(bold=True, size=sz, color=fg)
-        ws.cell(row=row, column=5).alignment = _align("right")
+        c5 = ws.cell(row=row, column=5, value=val)   # float
+        c5.number_format = _XL_FMT_DA
+        c5.font      = _font(bold=True, size=sz, color=fg)
+        c5.alignment = _align("right")
         ws.row_dimensions[row].height = 18 if sz < 12 else 22
         row += 1
 

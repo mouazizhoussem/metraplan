@@ -1341,8 +1341,11 @@ class MainWindow(QMainWindow):
         """Crée les widgets ancrables"""
         # Dock widget pour les propriétés
         self.properties_dock = PropertyPanel(self)
+        # Désactiver le bouton ✕ pour éviter la fermeture accidentelle
+        self.properties_dock.setFeatures(
+            QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable)
         self.addDockWidget(Qt.RightDockWidgetArea, self.properties_dock)
-        self.properties_dock.hide()  # masqué au démarrage, affiché quand un plan est chargé
+        self.properties_dock.show()  # visible par défaut au démarrage
 
         # Connecter les signaux du properties dock
         self.properties_dock.colorChanged.connect(self.on_entity_color_changed)
@@ -1358,8 +1361,11 @@ class MainWindow(QMainWindow):
         self.pdf_dock.setWidget(self.pdf_navigator)
         self.pdf_dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.pdf_dock.setMinimumWidth(280)
+        # Désactiver le bouton ✕ pour éviter la fermeture accidentelle
+        self.pdf_dock.setFeatures(
+            QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.pdf_dock)
-        self.pdf_dock.hide()
+        self.pdf_dock.show()  # visible par défaut au démarrage
 
         self.pdf_navigator.page_selected.connect(self.on_pdf_page_selected)
         self.pdf_navigator.entity_selected.connect(self.on_pdf_entity_selected_from_panel)
